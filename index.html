@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자재비 통합 계산기</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; color: #333; }
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; color: #333; margin-bottom: 80px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.9em; margin-bottom: 5px; color: #666; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        
+        /* 버튼 스타일 */
         .btn-box { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-add { background: #28a745; color: white; width: 100%; margin-bottom: 10px; }
@@ -18,14 +20,27 @@
         .btn-kakao { background: #fee500; color: #3c1e1e; }
         .btn-mail { background: #6c757d; color: white; }
         
+        /* 목록 스타일 */
         #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .item { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 8px; border-left: 5px solid #28a745; position: relative; font-size: 0.9em; }
         .item-num { color: #28a745; font-weight: bold; margin-right: 5px; }
         .del-btn { position: absolute; right: 10px; top: 10px; color: #ff4d4d; border: none; background: none; font-weight: bold; cursor: pointer; }
         
+        /* 합계 스타일 */
         #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; }
         .total-price { color: #ffeb3b; font-size: 1.2em; font-weight: bold; }
         
+        /* 광고 섹션 스타일 */
+        .ad-banner { margin-top: 25px; border: 1px dashed #007bff; border-radius: 8px; padding: 15px; background: #f0f7ff; text-align: center; }
+        .ad-tag { font-size: 0.7em; color: #007bff; font-weight: bold; border: 1px solid #007bff; padding: 1px 4px; border-radius: 3px; vertical-align: middle; }
+        .ad-title { font-weight: bold; font-size: 1.1em; color: #333; display: block; margin: 8px 0; }
+        .ad-call { display: inline-block; background: #d9534f; color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; margin-top: 5px; }
+
+        /* 하단 고정 광고바 */
+        .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; background: #222; color: #fff; padding: 12px 0; text-align: center; z-index: 999; font-size: 0.9em; box-shadow: 0 -2px 10px rgba(0,0,0,0.3); }
+        .fixed-ad a { color: #ffeb3b; text-decoration: none; font-weight: bold; }
+
+        /* 메일 선택 팝업 */
         .mail-select { margin-top: 10px; display: none; background: #eee; padding: 10px; border-radius: 5px; }
         .mail-option { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; text-align: left; background: white; }
     </style>
@@ -70,6 +85,13 @@
         총 합계: <span id="total-p" class="total-price">0</span> 원
     </div>
 
+    <div class="ad-banner">
+        <span class="ad-tag">광고</span>
+        <span class="ad-title">광주 지역 자재 및 가공 문의</span>
+        <p style="font-size: 0.9em; color: #666; margin: 0;">SUS, 알루미늄 절단 및 가공 전문 업체</p>
+        <a href="tel:010-0000-0000" class="ad-call">📞 지금 상담하기</a>
+    </div>
+
     <div class="btn-box">
         <button class="btn btn-copy" onclick="copyList()">목록 전체 복사</button>
         <button class="btn btn-share" onclick="shareSite()">이 사이트 공유</button>
@@ -85,6 +107,10 @@
         <button class="mail-option" onclick="sendEmail('daum')">K 카카오(다음) 메일</button>
         <button class="mail-option" onclick="sendEmail('gmail')">G Gmail</button>
     </div>
+</div>
+
+<div class="fixed-ad">
+    [공지] <a href="https://blog.naver.com">여기에 최신 공지나 홍보 문구를 넣으세요!</a>
 </div>
 
 <script>
@@ -143,18 +169,13 @@
     function copyList() {
         const text = getSummary();
         if(!text) return alert("목록이 비어있습니다.");
-        navigator.clipboard.writeText(text).then(() => {
-            alert("목록이 번호와 함께 복사되었습니다! 카톡 등에 붙여넣기 하세요.");
-        });
+        navigator.clipboard.writeText(text).then(() => alert("목록이 복사되었습니다!"));
     }
 
     function shareSite() {
         const url = window.location.href;
-        if (navigator.share) {
-            navigator.share({ title: '자재비 계산기', url: url });
-        } else {
-            navigator.clipboard.writeText(url).then(() => alert("사이트 주소가 복사되었습니다."));
-        }
+        if (navigator.share) navigator.share({ title: '자재비 계산기', url: url });
+        else navigator.clipboard.writeText(url).then(() => alert("사이트 주소 복사 완료!"));
     }
 
     function sendKakao() {
