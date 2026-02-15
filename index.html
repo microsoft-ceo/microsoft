@@ -3,130 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자재비 통합 계산기</title>
+    <title>자재비 누적 계산기</title>
     <style>
-        body { font-family: sans-serif; padding: 15px; background: #f4f7f6; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h2 { text-align: center; margin-bottom: 20px; }
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        label { display: block; font-size: 0.9em; margin-bottom: 5px; color: #666; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         .btn-box { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1em; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-calc { background: #007bff; color: white; }
         .btn-add { background: #28a745; color: white; }
-        
-        /* 리스트 스타일 */
-        #list-section { margin-top: 25px; border-top: 2px solid #eee; padding-top: 15px; }
-        .item-row { background: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 8px; font-size: 0.9em; border-left: 5px solid #007bff; position: relative; }
-        .delete-btn { position: absolute; right: 10px; top: 10px; color: red; font-weight: bold; cursor: pointer; }
-        
-        /* 합계 스타일 */
-        #total-box { margin-top: 20px; padding: 15px; background: #343a40; color: white; border-radius: 8px; text-align: right; }
-        .total-val { font-size: 1.2em; color: #ffeb3b; font-weight: bold; }
+        #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
+        .item { background: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 5px solid #28a745; font-size: 0.9em; }
+        #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; text-align: right; }
+        .total-price { color: #ffeb3b; font-size: 1.2em; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>자재비 계산기 (누적)</h2>
-    
+    <h2>자재비 계산기</h2>
     <div class="input-group">
-        <label>자재/비중</label>
+        <label>자재 선택</label>
         <select id="material">
             <option value="7.93">SUS303/304 (7.93)</option>
-            <option value="7.85">일반강 (7.85)</option>
+            <option value="7.85">일반강 SS400 (7.85)</option>
             <option value="2.7">알루미늄 (2.7)</option>
         </select>
     </div>
     <div class="input-group">
         <label>치수 (가로x세로x두께 mm)</label>
         <div style="display:flex; gap:5px;">
-            <input type="number" id="width" placeholder="가로">
-            <input type="number" id="length" placeholder="세로">
-            <input type="number" id="thick" placeholder="두께">
+            <input type="number" id="w" placeholder="가로">
+            <input type="number" id="l" placeholder="세로">
+            <input type="number" id="t" placeholder="두께">
         </div>
     </div>
     <div class="input-group">
         <label>단가 (원/kg)</label>
-        <input type="number" id="price" value="5000">
+        <input type="number" id="unitPrice" value="5000">
     </div>
 
     <div class="btn-box">
-        <button class="btn btn-calc" onclick="calculateCurrent()">단품 계산</button>
-        <button class="btn btn-add" onclick="addToList()">목록에 추가</button>
+        <button class="btn btn-calc" onclick="showCurrent()">단품 계산</button>
+        <button class="btn btn-add" onclick="addItem()">목록 추가</button>
     </div>
 
-    <div id="current-res" style="margin-top:15px; font-weight:bold; color:#007bff; text-align:center;"></div>
-
-    <div id="list-section">
-        <h3 style="font-size:1em;">선택 목록</h3>
-        <div id="item-list">
-            </div>
+    <div id="list-area">
+        <strong>계산 목록</strong>
+        <div id="items"></div>
     </div>
 
-    <div id="total-box">
-        <div>총 무게: <span id="total-weight" class="total-val">0.000</span> kg</div>
-        <div>총 합계: <span id="total-price" class="total-val">0</span> 원</div>
+    <div id="total-area">
+        총 무게: <span id="total-w">0.000</span> kg<br>
+        총 합계: <span id="total-p" class="total-price">0</span> 원
     </div>
-
-    <button onclick="location.reload()" style="margin-top:10px; width:100%; padding:10px; background:none; border:1px solid #ccc; border-radius:5px; color:#666;">전체 초기화</button>
 </div>
 
 <script>
-    let totalWeight = 0;
-    let totalPrice = 0;
+    let totalW = 0;
+    let totalP = 0;
 
-    function calculateWeight() {
-        const g = parseFloat(document.getElementById('material').value);
-        const w = parseFloat(document.getElementById('width').value) / 10;
-        const l = parseFloat(document.getElementById('length').value) / 10;
-        const t = parseFloat(document.getElementById('thick').value) / 10;
-        const p = parseFloat(document.getElementById('price').value);
-
+    function getCalc() {
+        const spec = parseFloat(document.getElementById('material').value);
+        const w = document.getElementById('w').value / 10;
+        const l = document.getElementById('l').value / 10;
+        const t = document.getElementById('t').value / 10;
+        const price = document.getElementById('unitPrice').value;
+        
         if(!w || !l || !t) return null;
-
-        const weight = (w * l * t * g) / 1000;
-        const price = Math.round(weight * p);
-        return { weight, price, dimensions: `${w*10}x${l*10}x${t*10}` };
+        
+        const weight = (w * l * t * spec) / 1000;
+        const cost = Math.round(weight * price);
+        return { weight, cost, desc: `${w*10}*${l*10}*${t*10}` };
     }
 
-    function calculateCurrent() {
-        const res = calculateWeight();
-        if(res) {
-            document.getElementById('current-res').innerText = `현재 품목: ${res.weight.toFixed(3)}kg / ${res.price.toLocaleString()}원`;
-        } else {
-            alert("치수를 입력해주세요.");
-        }
+    function showCurrent() {
+        const res = getCalc();
+        if(res) alert(`무게: ${res.weight.toFixed(3)}kg\n금액: ${res.cost.toLocaleString()}원`);
     }
 
-    function addToList() {
-        const res = calculateWeight();
-        if(!res) return alert("입력값을 확인해주세요.");
+    function addItem() {
+        const res = getCalc();
+        if(!res) return alert("치수를 입력하세요.");
 
-        // 총합 누적
-        totalWeight += res.weight;
-        totalPrice += res.price;
+        totalW += res.weight;
+        totalP += res.cost;
 
-        // 목록에 추가
-        const list = document.getElementById('item-list');
-        const row = document.createElement('div');
-        row.className = 'item-row';
-        row.innerHTML = `
-            <div><strong>${res.dimensions}</strong> (${document.getElementById('material').options[document.getElementById('material').selectedIndex].text})</div>
-            <div>${res.weight.toFixed(3)}kg / ${res.price.toLocaleString()}원</div>
-        `;
-        list.appendChild(row);
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<b>${res.desc}</b>: ${res.weight.toFixed(3)}kg / ${res.cost.toLocaleString()}원`;
+        document.getElementById('items').appendChild(div);
 
-        // 합계 업데이트
-        updateTotal();
-    }
-
-    function updateTotal() {
-        document.getElementById('total-weight').innerText = totalWeight.toFixed(3);
-        document.getElementById('total-price').innerText = totalPrice.toLocaleString();
+        document.getElementById('total-w').innerText = totalW.toFixed(3);
+        document.getElementById('total-p').innerText = totalP.toLocaleString();
     }
 </script>
-
 </body>
 </html>
