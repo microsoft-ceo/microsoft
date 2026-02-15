@@ -3,27 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자재비 누적 계산기</title>
+    <title>자재비 통합 계산기</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; }
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; color: #333; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.9em; margin-bottom: 5px; color: #666; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
-        .btn-box { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-box { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 100px; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-calc { background: #007bff; color: white; }
         .btn-add { background: #28a745; color: white; }
+        .btn-kakao { background: #fee500; color: #3c1e1e; }
+        .btn-mail { background: #6c757d; color: white; }
+        
         #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
-        .item { background: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 5px solid #28a745; font-size: 0.9em; }
-        #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; text-align: right; }
+        .item { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 8px; border-left: 5px solid #28a745; position: relative; font-size: 0.9em; }
+        .del-btn { position: absolute; right: 10px; top: 10px; color: #ff4d4d; border: none; background: none; font-weight: bold; cursor: pointer; padding: 5px; }
+        
+        #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .total-price { color: #ffeb3b; font-size: 1.2em; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>자재비 계산기</h2>
+    <h2 style="text-align:center;">자재비 계산기</h2>
+    
     <div class="input-group">
         <label>자재 선택</label>
         <select id="material">
@@ -32,22 +39,23 @@
             <option value="2.7">알루미늄 (2.7)</option>
         </select>
     </div>
+    
     <div class="input-group">
-        <label>치수 (가로x세로x두께 mm)</label>
+        <label>치수 (mm)</label>
         <div style="display:flex; gap:5px;">
             <input type="number" id="w" placeholder="가로">
             <input type="number" id="l" placeholder="세로">
             <input type="number" id="t" placeholder="두께">
         </div>
     </div>
+    
     <div class="input-group">
         <label>단가 (원/kg)</label>
         <input type="number" id="unitPrice" value="5000">
     </div>
 
     <div class="btn-box">
-        <button class="btn btn-calc" onclick="showCurrent()">단품 계산</button>
-        <button class="btn btn-add" onclick="addItem()">목록 추가</button>
+        <button class="btn btn-add" onclick="addItem()">목록에 추가</button>
     </div>
 
     <div id="list-area">
@@ -56,49 +64,101 @@
     </div>
 
     <div id="total-area">
-        총 무게: <span id="total-w">0.000</span> kg<br>
-        총 합계: <span id="total-p" class="total-price">0</span> 원
+        <div class="total-row">총 무게: <span id="total-w">0.000</span> kg</div>
+        <div class="total-row">총 합계: <span id="total-p" class="total-price">0</span> 원</div>
+    </div>
+
+    <div class="btn-box">
+        <button class="btn btn-kakao" onclick="sendKakao()">카톡 전송</button>
+        <button class="btn btn-mail" onclick="sendEmail()">메일 전송</button>
     </div>
 </div>
 
 <script>
-    let totalW = 0;
-    let totalP = 0;
-
-    function getCalc() {
-        const spec = parseFloat(document.getElementById('material').value);
-        const w = document.getElementById('w').value / 10;
-        const l = document.getElementById('l').value / 10;
-        const t = document.getElementById('t').value / 10;
-        const price = document.getElementById('unitPrice').value;
-        
-        if(!w || !l || !t) return null;
-        
-        const weight = (w * l * t * spec) / 1000;
-        const cost = Math.round(weight * price);
-        return { weight, cost, desc: `${w*10}*${l*10}*${t*10}` };
-    }
-
-    function showCurrent() {
-        const res = getCalc();
-        if(res) alert(`무게: ${res.weight.toFixed(3)}kg\n금액: ${res.cost.toLocaleString()}원`);
-    }
+    let itemList = [];
 
     function addItem() {
-        const res = getCalc();
-        if(!res) return alert("치수를 입력하세요.");
+        const spec = document.getElementById('material');
+        const matName = spec.options[spec.selectedIndex].text;
+        const gravity = parseFloat(spec.value);
+        const w = document.getElementById('w').value;
+        const l = document.getElementById('l').value;
+        const t = document.getElementById('t').value;
+        const up = document.getElementById('unitPrice').value;
 
-        totalW += res.weight;
-        totalP += res.cost;
+        if(!w || !l || !t) return alert("치수를 모두 입력해주세요.");
 
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `<b>${res.desc}</b>: ${res.weight.toFixed(3)}kg / ${res.cost.toLocaleString()}원`;
-        document.getElementById('items').appendChild(div);
+        const weight = ( (w/10) * (l/10) * (t/10) * gravity ) / 1000;
+        const cost = Math.round(weight * up);
+        
+        const item = {
+            id: Date.now(),
+            text: `${matName} / ${w}*${l}*${t}`,
+            weight: weight,
+            cost: cost
+        };
 
-        document.getElementById('total-w').innerText = totalW.toFixed(3);
-        document.getElementById('total-p').innerText = totalP.toLocaleString();
+        itemList.push(item);
+        renderList();
+    }
+
+    function deleteItem(id) {
+        itemList = itemList.filter(item => item.id !== id);
+        renderList();
+    }
+
+    function renderList() {
+        const container = document.getElementById('items');
+        container.innerHTML = "";
+        let tw = 0; let tp = 0;
+
+        itemList.forEach(item => {
+            tw += item.weight;
+            tp += item.cost;
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `
+                <b>${item.text}</b><br>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원
+                <button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>
+            `;
+            container.appendChild(div);
+        });
+
+        document.getElementById('total-w').innerText = tw.toFixed(3);
+        document.getElementById('total-p').innerText = tp.toLocaleString();
+    }
+
+    function getSummaryText() {
+        if(itemList.length === 0) return "";
+        let text = "[자재 견적 목록]\n";
+        itemList.forEach((item, idx) => {
+            text += `${idx+1}. ${item.text} (${item.weight.toFixed(3)}kg)\n`;
+        });
+        text += `\n총 무게: ${document.getElementById('total-w').innerText}kg`;
+        text += `\n총 합계: ${document.getElementById('total-p').innerText}원`;
+        return text;
+    }
+
+    function sendKakao() {
+        const text = getSummaryText();
+        if(!text) return alert("목록이 비어있습니다.");
+        
+        // 모바일 기본 공유 기능 활용
+        if (navigator.share) {
+            navigator.share({ title: '자재 견적', text: text });
+        } else {
+            alert("이 브라우저에서는 공유 기능을 지원하지 않습니다. 아래 내용을 복사하세요.\n\n" + text);
+        }
+    }
+
+    function sendEmail() {
+        const text = getSummaryText();
+        if(!text) return alert("목록이 비어있습니다.");
+        const subject = encodeURIComponent("자재비 견적 발송");
+        const body = encodeURIComponent(text);
+        location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 </script>
+
 </body>
 </html>
