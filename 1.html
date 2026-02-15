@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재비 & 무게 계산기</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 1em; cursor: pointer; }
+        #result-box { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 8px; }
+        .res-val { font-weight: bold; color: #d9534f; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>자재비 계산기</h2>
+    
+    <div class="input-group">
+        <label>자재 선택 (비중 자동입력)</label>
+        <select id="material" onchange="setSpecificGravity()">
+            <option value="7.93">SUS303 / SUS304 (7.93)</option>
+            <option value="7.85">일반강 (SS400) (7.85)</option>
+            <option value="2.7">알루미늄 (2.7)</option>
+            <option value="0">직접 입력</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>비중 (g/cm³)</label>
+        <input type="number" id="gravity" step="0.01" value="7.93">
+    </div>
+
+    <div class="radio-group">
+        <label><input type="radio" name="shape" value="square" checked onclick="toggleShape()"> 사각판</label>
+        <label><input type="radio" name="shape" value="circle" onclick="toggleShape()"> 원형(봉)</label>
+    </div>
+
+    <div id="square-inputs">
+        <div class="input-group">
+            <label>가로 (mm)</label>
+            <input type="number" id="width" placeholder="0">
+        </div>
+        <div class="input-group">
+            <label>세로 (mm)</label>
+            <input type="number" id="length" placeholder="0">
+        </div>
+    </div>
+
+    <div id="circle-inputs" style="display:none;">
+        <div class="input-group">
+            <label>반지름 (mm)</label>
+            <input type="number" id="radius" placeholder="0">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>두께(T) 또는 높이 (mm)</label>
+        <input type="number" id="thickness" placeholder="0">
+    </div>
+
+    <div class="input-group">
+        <label>단가 (원/kg)</label>
+        <input type="number" id="pricePerKg" value="5000">
+    </div>
+
+    <button class="btn" onclick="calculate()">계산하기</button>
+
+    <div id="result-box">
+        <div>예상 무게: <span id="resWeight" class="res-val">0</span> kg</div>
+        <div>최종 금액: <span id="resPrice" class="res-val">0</span> 원</div>
+    </div>
+</div>
+
+<script>
+    function setSpecificGravity() {
+        const select = document.getElementById('material');
+        if(select.value !== "0") {
+            document.getElementById('gravity').value = select.value;
+        }
+    }
+
+    function toggleShape() {
+        const shape = document.querySelector('input[name="shape"]:checked').value;
+        document.getElementById('square-inputs').style.display = (shape === 'square') ? 'block' : 'none';
+        document.getElementById('circle-inputs').style.display = (shape === 'circle') ? 'block' : 'none';
+    }
+
+    function calculate() {
+        const gravity = parseFloat(document.getElementById('gravity').value);
+        const thickness = parseFloat(document.getElementById('thickness').value) / 10; // mm -> cm
+        const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
+        const shape = document.querySelector('input[name="shape"]:checked').value;
+        
+        let volume = 0; // cm³ 단위
+
+        if (shape === 'square') {
+            const w = parseFloat(document.getElementById('width').value) / 10;
+            const l = parseFloat(document.getElementById('length').value) / 10;
+            volume = w * l * thickness;
+        } else {
+            const r = parseFloat(document.getElementById('radius').value) / 10;
+            const pi = Math.PI; // 원주율
+            volume = r * r * pi * thickness;
+        }
+
+        const weightKg = (volume * gravity) / 1000; // g을 kg으로 변환
+        const totalPrice = weightKg * pricePerKg;
+
+        document.getElementById('resWeight').innerText = weightKg.toFixed(3);
+        document.getElementById('resPrice').innerText = Math.round(totalPrice).toLocaleString();
+    }
+</script>
+
+</body>
+</html>
