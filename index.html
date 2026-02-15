@@ -6,15 +6,16 @@
     <title>자재비 & 무게 계산기</title>
     <style>
         body { font-family: sans-serif; padding: 15px; background: #f4f7f6; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         h2 { text-align: center; color: #333; }
         .input-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 1em; cursor: pointer; }
-        #result-box { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 8px; }
+        .btn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
+        #result-box { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 8px; line-height: 1.6; }
         .res-val { font-weight: bold; color: #d9534f; }
+        .share-btn { margin-top: 10px; width: 100%; background: #6c757d; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -23,7 +24,7 @@
     <h2>자재비 계산기</h2>
     
     <div class="input-group">
-        <label>자재 선택 (비중 자동입력)</label>
+        <label>자재 선택 (비중)</label>
         <select id="material" onchange="setSpecificGravity()">
             <option value="7.93">SUS303 / SUS304 (7.93)</option>
             <option value="7.85">일반강 (SS400) (7.85)</option>
@@ -76,6 +77,8 @@
         <div>예상 무게: <span id="resWeight" class="res-val">0</span> kg</div>
         <div>최종 금액: <span id="resPrice" class="res-val">0</span> 원</div>
     </div>
+
+    <button class="share-btn" onclick="shareLink()">🔗 이 계산기 주소 공유하기</button>
 </div>
 
 <script>
@@ -94,11 +97,11 @@
 
     function calculate() {
         const gravity = parseFloat(document.getElementById('gravity').value);
-        const thickness = parseFloat(document.getElementById('thickness').value) / 10; // mm -> cm
+        const thickness = parseFloat(document.getElementById('thickness').value) / 10;
         const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
         const shape = document.querySelector('input[name="shape"]:checked').value;
         
-        let volume = 0; // cm³ 단위
+        let volume = 0;
 
         if (shape === 'square') {
             const w = parseFloat(document.getElementById('width').value) / 10;
@@ -106,15 +109,23 @@
             volume = w * l * thickness;
         } else {
             const r = parseFloat(document.getElementById('radius').value) / 10;
-            const pi = Math.PI; // 원주율
-            volume = r * r * pi * thickness;
+            volume = r * r * Math.PI * thickness;
         }
 
-        const weightKg = (volume * gravity) / 1000; // g을 kg으로 변환
+        const weightKg = (volume * gravity) / 1000;
         const totalPrice = weightKg * pricePerKg;
 
         document.getElementById('resWeight').innerText = weightKg.toFixed(3);
         document.getElementById('resPrice').innerText = Math.round(totalPrice).toLocaleString();
+    }
+
+    function shareLink() {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: '자재비 계산기', url: url });
+        } else {
+            alert('주소를 복사하세요: ' + url);
+        }
     }
 </script>
 
