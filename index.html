@@ -11,9 +11,11 @@
         label { display: block; font-size: 0.9em; margin-bottom: 5px; color: #666; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         .btn-box { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .btn { flex: 1; min-width: 100px; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-add { background: #28a745; color: white; width: 100%; margin-bottom: 10px; }
-        .btn-kakao { background: #fee500; color: #3c1e1e; width: 100%; }
+        .btn-copy { background: #007bff; color: white; }
+        .btn-share { background: #6f42c1; color: white; }
+        .btn-kakao { background: #fee500; color: #3c1e1e; }
         .btn-mail { background: #6c757d; color: white; }
         
         #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
@@ -23,7 +25,6 @@
         #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; }
         .total-price { color: #ffeb3b; font-size: 1.2em; font-weight: bold; }
         
-        /* 메일 선택 팝업 스타일 */
         .mail-select { margin-top: 10px; display: none; background: #eee; padding: 10px; border-radius: 5px; }
         .mail-option { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; text-align: left; background: white; }
     </style>
@@ -69,15 +70,19 @@
     </div>
 
     <div class="btn-box">
-        <button class="btn btn-kakao" onclick="sendKakao()">카카오톡 전송</button>
-        <button class="btn btn-mail" onclick="toggleMailSelect()">메일로 내보내기 ▼</button>
+        <button class="btn btn-copy" onclick="copyList()">목록 전체 복사</button>
+        <button class="btn btn-share" onclick="shareSite()">이 사이트 공유</button>
+    </div>
+
+    <div class="btn-box">
+        <button class="btn btn-kakao" onclick="sendKakao()">카톡 전송 시도</button>
+        <button class="btn btn-mail" onclick="toggleMailSelect()">메일로 보내기 ▼</button>
     </div>
 
     <div id="mail-select-area" class="mail-select">
-        <button class="mail-option" onclick="sendEmail('naver')">N 네이버 메일로 보내기</button>
-        <button class="mail-option" onclick="sendEmail('daum')">K 카카오(다음) 메일로 보내기</button>
-        <button class="mail-option" onclick="sendEmail('gmail')">G Gmail로 보내기</button>
-        <button class="mail-option" onclick="sendEmail('default')">📱 기본 메일 앱(아웃룩 등)</button>
+        <button class="mail-option" onclick="sendEmail('naver')">N 네이버 메일</button>
+        <button class="mail-option" onclick="sendEmail('daum')">K 카카오(다음) 메일</button>
+        <button class="mail-option" onclick="sendEmail('gmail')">G Gmail</button>
     </div>
 </div>
 
@@ -128,11 +133,30 @@
         return text;
     }
 
+    function copyList() {
+        const text = getSummary();
+        if(!text) return alert("목록이 비어있습니다.");
+        navigator.clipboard.writeText(text).then(() => {
+            alert("목록이 복사되었습니다! 카카오톡창에 '붙여넣기' 하세요.");
+        });
+    }
+
+    function shareSite() {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: '자재비 계산기', url: url });
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                alert("사이트 주소가 복사되었습니다.");
+            });
+        }
+    }
+
     function sendKakao() {
         const text = getSummary();
         if(!text) return alert("목록이 비어있습니다.");
         if (navigator.share) navigator.share({ title: '자재 견적', text });
-        else alert("복사 후 전송하세요:\n\n" + text);
+        else copyList();
     }
 
     function toggleMailSelect() {
@@ -143,16 +167,13 @@
     function sendEmail(service) {
         const text = getSummary();
         if(!text) return alert("목록이 비어있습니다.");
-        
         const subject = encodeURIComponent("자재비 견적 요약");
         const body = encodeURIComponent(text);
-        
         let mailUrl = "";
         switch(service) {
             case 'naver': mailUrl = `https://mail.naver.com/v2/compose?subject=${subject}&body=${body}`; break;
-            case 'daum': mailUrl = `https://mail.kakao.com/talk/v2/compose?subject=${subject}&body=${body}`; break; // 카카오메일(구 다음)
+            case 'daum': mailUrl = `https://mail.kakao.com/talk/v2/compose?subject=${subject}&body=${body}`; break;
             case 'gmail': mailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`; break;
-            default: mailUrl = `mailto:?subject=${subject}&body=${body}`;
         }
         window.open(mailUrl, '_blank');
     }
