@@ -20,8 +20,18 @@
         .btn-mail { background: #6c757d; color: white; }
         
         #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
-        .item { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 8px; border-left: 5px solid #28a745; position: relative; font-size: 0.9em; }
-        .item-num { color: #28a745; font-weight: bold; margin-right: 5px; }
+        
+        /* 목록 기본 스타일 */
+        .item { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 8px; position: relative; font-size: 0.9em; border-left: 6px solid #ccc; }
+        
+        /* 자재별 테두리 색상 */
+        .border-sus { border-left-color: #28a745; } /* SUS: 초록 */
+        .border-ss400 { border-left-color: #fd7e14; } /* SS400: 주황 */
+        .border-al { border-left-color: #007bff; } /* AL: 파랑 */
+        
+        /* 목록 번호 스타일 - 항상 초록색 */
+        .item-num { color: #28a745; font-weight: bold; margin-right: 5px; font-size: 1.1em; }
+        
         .del-btn { position: absolute; right: 10px; top: 10px; color: #ff4d4d; border: none; background: none; font-weight: bold; cursor: pointer; }
         
         #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; }
@@ -38,16 +48,16 @@
     <h2 style="text-align:center;">자재비 계산기</h2>
     
     <div class="input-group">
-        <label>자재 선택 (비중)</label>
+        <label>자재 선택</label>
         <select id="material">
-            <option value="7.93">SUS303/304 (7.93)</option>
-            <option value="7.85">일반강 SS400 (7.85)</option>
-            <option value="2.7">알루미늄 (2.7)</option>
+            <option value="7.93" data-class="border-sus">SUS303/304 (7.93)</option>
+            <option value="7.85" data-class="border-ss400">일반강 SS400 (7.85)</option>
+            <option value="2.7" data-class="border-al">알루미늄 (2.7)</option>
         </select>
     </div>
     
     <div class="input-group">
-        <label>치수 (가로*세로*두께 mm)</label>
+        <label>치수 (mm)</label>
         <div style="display:flex; gap:5px;">
             <input type="number" id="w" placeholder="가로">
             <input type="number" id="l" placeholder="세로">
@@ -74,7 +84,7 @@
 
     <div class="ad-banner">
         <a href="tel:010-0000-0000">
-            <img src="mcad.png" alt="문의하기" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;" onerror="this.src='https://via.placeholder.com/400x100?text=AD+IMAGE+NOT+FOUND'">
+            <img src="ad.jpg" alt="문의하기" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;" onerror="this.src='https://via.placeholder.com/400x100?text=AD+IMAGE+NOT+FOUND'">
         </a>
     </div>
 
@@ -100,17 +110,28 @@
 
     function addItem() {
         const spec = document.getElementById('material');
-        const matName = spec.options[spec.selectedIndex].text;
-        const gravity = parseFloat(spec.value);
+        const selectedOption = spec.options[spec.selectedIndex];
+        const matName = selectedOption.text;
+        const gravity = parseFloat(selectedOption.value);
+        const colorClass = selectedOption.getAttribute('data-class'); // 자재별 클래스 가져오기
+
         const w = document.getElementById('w').value;
         const l = document.getElementById('l').value;
         const t = document.getElementById('t').value;
         const up = document.getElementById('unitPrice').value;
 
         if(!w || !l || !t) return alert("치수를 입력하세요.");
+        
         const weight = ( (w/10) * (l/10) * (t/10) * gravity ) / 1000;
         const cost = Math.round(weight * up);
-        itemList.push({ id: Date.now(), text: `${matName} / ${w}*${l}*${t}`, weight, cost });
+        
+        itemList.push({ 
+            id: Date.now(), 
+            text: `${matName} / ${w}*${l}*${t}`, 
+            weight, 
+            cost,
+            colorClass: colorClass
+        });
         renderList();
     }
 
@@ -123,10 +144,11 @@
         const container = document.getElementById('items');
         container.innerHTML = "";
         let tw = 0; let tp = 0;
+        
         itemList.forEach((item, index) => {
             tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
-            div.className = 'item';
+            div.className = `item ${item.colorClass}`; // 자재별 색상 클래스 적용
             div.innerHTML = `
                 <span class="item-num">${index + 1}.</span> <b>${item.text}</b><br>
                 ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원 
@@ -134,6 +156,7 @@
             `;
             container.appendChild(div);
         });
+        
         document.getElementById('total-w').innerText = tw.toFixed(3);
         document.getElementById('total-p').innerText = tp.toLocaleString();
     }
