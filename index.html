@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자재비 통합 계산기</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; color: #333; margin-bottom: 80px; }
+        /* 기본 스타일 */
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; color: #333; margin-bottom: 100px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.9em; margin-bottom: 5px; color: #666; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         
+        /* 버튼 스타일 */
         .btn-box { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-add { background: #28a745; color: white; width: 100%; margin-bottom: 10px; }
@@ -19,25 +21,22 @@
         .btn-kakao { background: #fee500; color: #3c1e1e; }
         .btn-mail { background: #6c757d; color: white; }
         
+        /* 목록 및 색상 띠 스타일 */
         #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
-        
-        /* 목록 기본 스타일 */
         .item { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 8px; position: relative; font-size: 0.9em; border-left: 6px solid #ccc; }
-        
-        /* 자재별 테두리 색상 */
         .border-sus { border-left-color: #28a745; } /* SUS: 초록 */
         .border-ss400 { border-left-color: #fd7e14; } /* SS400: 주황 */
         .border-al { border-left-color: #007bff; } /* AL: 파랑 */
-        
-        /* 목록 번호 스타일 - 항상 초록색 */
         .item-num { color: #28a745; font-weight: bold; margin-right: 5px; font-size: 1.1em; }
-        
         .del-btn { position: absolute; right: 10px; top: 10px; color: #ff4d4d; border: none; background: none; font-weight: bold; cursor: pointer; }
         
+        /* 합계 스타일 */
         #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; }
         .total-price { color: #ffeb3b; font-size: 1.2em; font-weight: bold; }
         
-        .ad-banner { margin: 20px 0; text-align: center; }
+        /* 광고 영역 스타일 */
+        .ad-banner { margin: 25px 0; text-align: center; }
+        .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 999; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-top: 1px solid #eee; }
         .mail-select { margin-top: 10px; display: none; background: #eee; padding: 10px; border-radius: 5px; }
         .mail-option { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; text-align: left; background: white; }
     </style>
@@ -83,8 +82,9 @@
     </div>
 
     <div class="ad-banner">
+        <p style="font-size: 0.7em; color: #999; margin-bottom: 5px;">광고</p>
         <a href="tel:010-0000-0000">
-            <img src="ad.jpg" alt="문의하기" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;" onerror="this.src='https://via.placeholder.com/400x100?text=AD+IMAGE+NOT+FOUND'">
+            <img src="ad.jpg" alt="견적 상담하기" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;" onerror="this.src='https://via.placeholder.com/400x100?text=AD+IMAGE+NOT+FOUND'">
         </a>
     </div>
 
@@ -105,6 +105,12 @@
     </div>
 </div>
 
+<div class="fixed-ad">
+    <a href="https://open.kakao.com/o/yourid">
+        <img src="bottom_ad.png" alt="카톡 실시간 문의" style="width: 100%; height: 60px; object-fit: cover; display: block;" onerror="this.src='https://via.placeholder.com/1000x120?text=FIXED+AD+IMAGE+NOT+FOUND'">
+    </a>
+</div>
+
 <script>
     let itemList = [];
 
@@ -113,7 +119,7 @@
         const selectedOption = spec.options[spec.selectedIndex];
         const matName = selectedOption.text;
         const gravity = parseFloat(selectedOption.value);
-        const colorClass = selectedOption.getAttribute('data-class'); // 자재별 클래스 가져오기
+        const colorClass = selectedOption.getAttribute('data-class');
 
         const w = document.getElementById('w').value;
         const l = document.getElementById('l').value;
@@ -148,7 +154,7 @@
         itemList.forEach((item, index) => {
             tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
-            div.className = `item ${item.colorClass}`; // 자재별 색상 클래스 적용
+            div.className = `item ${item.colorClass}`;
             div.innerHTML = `
                 <span class="item-num">${index + 1}.</span> <b>${item.text}</b><br>
                 ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원 
@@ -174,7 +180,7 @@
     function copyList() {
         const text = getSummary();
         if(!text) return alert("목록이 비어있습니다.");
-        navigator.clipboard.writeText(text).then(() => alert("목록이 복사되었습니다!"));
+        navigator.clipboard.writeText(text).then(() => alert("목록이 번호와 함께 복사되었습니다!"));
     }
 
     function shareSite() {
