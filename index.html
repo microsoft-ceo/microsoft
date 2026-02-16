@@ -13,63 +13,60 @@
             --ios-card: #FFFFFF;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--ios-bg); margin: 0; padding: 20px; color: #000; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 500px; margin: 0 auto; padding-bottom: 120px; }
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 140px; }
         
-        /* 카드 스타일 */
         .card { background: var(--ios-card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h2 { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 25px; letter-spacing: -0.5px; }
 
-        /* 입력 폼 스타일 */
         .input-group { margin-bottom: 16px; }
         label { display: block; font-size: 13px; font-weight: 500; color: #8E8E93; margin-left: 5px; margin-bottom: 6px; }
         input, select { 
             width: 100%; padding: 12px 16px; border: none; background: #F2F2F7; 
             border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box;
-            transition: all 0.2s ease;
         }
-        input:focus { background: #E5E5EA; box-shadow: inset 0 0 0 1px var(--ios-blue); }
 
-        /* 버튼 디자인 */
         .btn-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn { 
-            border: none; border-radius: 12px; font-weight: 600; font-size: 15px; 
-            padding: 14px; cursor: pointer; transition: opacity 0.2s; text-align: center;
-        }
-        .btn:active { opacity: 0.7; }
-        .btn-full { grid-column: span 2; }
-        .btn-add { background: var(--ios-green); color: white; }
+        .btn { border: none; border-radius: 12px; font-weight: 600; font-size: 15px; padding: 14px; cursor: pointer; text-align: center; }
+        .btn-add { background: var(--ios-green); color: white; width: 100%; margin-bottom: 10px; }
         .btn-copy { background: var(--ios-blue); color: white; }
-        .btn-sms { background: var(--ios-orange); color: white; }
+        .btn-sms { background: var(--ios-orange); color: white; width: 100%; margin-top: 10px; }
         .btn-etc { background: #E5E5EA; color: #000; }
 
-        /* 목록 디자인 */
-        #list-area { margin-top: 25px; }
-        .item { 
+        #items .item { 
             background: white; padding: 16px; border-radius: 16px; margin-bottom: 10px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 6px solid #CCC;
         }
-        .item-info b { font-size: 15px; color: #1C1C1E; }
-        .item-info p { font-size: 13px; color: #8E8E93; margin: 4px 0 0 0; }
-        .item-num { color: var(--ios-green); font-weight: bold; margin-right: 4px; }
-        .del-btn { color: #FF3B30; font-weight: 600; font-size: 13px; border: none; background: none; cursor: pointer; }
-
-        /* 자재별 색상 */
         .border-sus { border-left-color: var(--ios-green); }
         .border-ss400 { border-left-color: var(--ios-orange); }
         .border-al { border-left-color: var(--ios-blue); }
 
-        /* 합계 섹션 */
         .total-card { background: #1C1C1E; color: white; border-radius: 20px; padding: 20px; margin-top: 20px; }
-        .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #AEAEB2; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
         .total-row strong { font-size: 18px; color: #FFD60A; }
 
-        /* 광고 영역 */
-        .ad-banner { margin: 20px 0; border-radius: 16px; overflow: hidden; border: 1px solid #E5E5EA; }
-        .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 1000; border-top: 1px solid #D1D1D6; }
-        
+        /* 깜빡이는 광고 스타일 */
+        @keyframes blink { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.3; } 
+            100% { opacity: 1; } 
+        }
+        .ad-placeholder {
+            background: #E5E5EA; border-radius: 12px; height: 100px; 
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ios-blue); font-weight: bold; font-size: 18px;
+            animation: blink 1.5s infinite; text-decoration: none;
+        }
+        .ad-banner { margin: 20px 0; border-radius: 16px; overflow: hidden; }
+        .fixed-ad { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); 
+            z-index: 1000; border-top: 1px solid #D1D1D6; display: flex; align-items: center; justify-content: center;
+        }
+        .fixed-ad .ad-placeholder { width: 90%; height: 50px; font-size: 15px; }
+
         .mail-select { margin-top: 10px; display: none; background: #F2F2F7; padding: 10px; border-radius: 12px; }
-        .mail-option { width: 100%; padding: 12px; margin-top: 5px; border: none; border-radius: 8px; background: white; font-weight: 500; cursor: pointer; text-align: left; }
+        .mail-option { width: 100%; padding: 12px; margin-top: 5px; border: none; border-radius: 8px; background: white; font-weight: 500; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -118,11 +115,10 @@
             <input type="number" id="unitPrice" value="5000">
         </div>
 
-        <button class="btn btn-add btn-full" onclick="addItem()">목록에 추가</button>
+        <button class="btn btn-add" onclick="addItem()">목록에 추가</button>
     </div>
 
     <div id="list-area">
-        <label style="margin-left:5px">계산 리스트</label>
         <div id="items"></div>
     </div>
 
@@ -134,15 +130,16 @@
     </div>
 
     <div class="ad-banner">
-        <a href="tel:010-0000-0000">
-            <img src="mcad.png" alt="문의" style="width:100%; display:block;" onerror="this.src='https://via.placeholder.com/500x120?text=AD+IMAGE'">
+        <a href="tel:010-0000-0000" id="mid-ad">
+            <img src="ad.jpg" id="ad-img" style="width:100%; display:none;" onerror="showPlaceholder('mid-ad')">
+            <div class="ad-placeholder" id="mid-placeholder">📢 광고 모집 중 (클릭 문의)</div>
         </a>
     </div>
 
     <div class="btn-box">
-        <button class="btn btn-copy" onclick="copyList()">양식 복사</button>
-        <button class="btn btn-etc" onclick="shareSite()">사이트 공유</button>
-        <button class="btn btn-sms btn-full" onclick="sendSms()">📱 010-0000-0000 문자 전송</button>
+        <button class="btn btn-copy" onclick="copyList()">📋 견적 복사</button>
+        <button class="btn btn-etc" onclick="shareSite()">🔗 사이트 공유</button>
+        <button class="btn btn-sms" style="grid-column: span 2;" onclick="sendSms()">📱 010-0000-0000 문자 전송</button>
         <button class="btn btn-etc" onclick="sendKakao()">카톡 전송</button>
         <button class="btn btn-etc" onclick="toggleMailSelect()">메일 보내기 ▼</button>
     </div>
@@ -155,13 +152,40 @@
 </div>
 
 <div class="fixed-ad">
-    <a href="https://open.kakao.com/o/yourid">
-        <img src="bottom_ad.jpg" alt="문의" style="width:100%; height:60px; object-fit:cover; display:block;" onerror="this.src='https://via.placeholder.com/1000x120?text=BOTTOM+AD'">
+    <a href="https://open.kakao.com/o/yourid" id="bottom-ad" style="width: 100%; text-decoration: none; display: flex; justify-content: center;">
+        <img src="bottom_ad.png" id="bottom-img" style="width:90%; height:50px; object-fit:cover; border-radius:10px; display:none;" onerror="showPlaceholder('bottom-ad')">
+        <div class="ad-placeholder" id="bottom-placeholder">✨ 하단 배너 광고 모집 중 ✨</div>
     </a>
 </div>
 
 <script>
     let itemList = [];
+
+    // 이미지가 있으면 이미지를 보여주고, 없으면 깜빡이는 박스 유지
+    function showPlaceholder(id) {
+        if(id === 'mid-ad') {
+            document.getElementById('ad-img').style.display = 'none';
+            document.getElementById('mid-placeholder').style.display = 'flex';
+        } else {
+            document.getElementById('bottom-img').style.display = 'none';
+            document.getElementById('bottom-placeholder').style.display = 'flex';
+        }
+    }
+
+    // 이미지 로딩 성공 시 처리
+    window.onload = function() {
+        const adImg = document.getElementById('ad-img');
+        const bottomImg = document.getElementById('bottom-img');
+        if(adImg.complete && adImg.naturalHeight !== 0) {
+            adImg.style.display = 'block';
+            document.getElementById('mid-placeholder').style.display = 'none';
+        }
+        if(bottomImg.complete && bottomImg.naturalHeight !== 0) {
+            bottomImg.style.display = 'block';
+            document.getElementById('bottom-placeholder').style.display = 'none';
+        }
+    };
+
     function toggleInputs() {
         const s = document.getElementById('shape').value;
         document.getElementById('square-inputs').style.display = (s === 'square') ? 'block' : 'none';
@@ -211,7 +235,7 @@
             tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
             div.className = `item ${item.color}`;
-            div.innerHTML = `<div class="item-info"><span class="item-num">${i+1}.</span><b>${item.txt}</b><p>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p></div><button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
+            div.innerHTML = `<div class="item-info"><span style="color:#34C759;font-weight:bold;">${i+1}.</span> <b>${item.txt}</b><p style="margin:4px 0 0 0;font-size:13px;color:#8E8E93;">${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p></div><button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
             container.appendChild(div);
         });
         document.getElementById('total-w').innerText = tw.toFixed(3);
@@ -231,15 +255,12 @@
     function toggleMailSelect() { const a = document.getElementById('mail-select-area'); a.style.display = (a.style.display === 'block') ? 'none' : 'block'; }
     function sendEmail(svc) {
         const sub = encodeURIComponent("자재비 견적 요약"); const body = encodeURIComponent(getSum());
-        let url = "";
-        if(svc === 'naver') url = `https://mail.naver.com/v2/compose?subject=${sub}&body=${body}`;
-        else if(svc === 'daum') url = `https://mail.kakao.com/talk/v2/compose?subject=${sub}&body=${body}`;
-        else url = `https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`;
+        let url = (svc === 'naver') ? `https://mail.naver.com/v2/compose?subject=${sub}&body=${body}` : 
+                  (svc === 'daum') ? `https://mail.kakao.com/talk/v2/compose?subject=${sub}&body=${body}` : 
+                  `https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`;
         window.open(url, '_blank');
     }
     function shareSite() { navigator.share({ title: '자재 계산기', url: window.location.href }); }
 </script>
 </body>
 </html>
-
-
