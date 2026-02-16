@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자재비 통합 계산기</title>
+    <title>자재비 통합 견적기</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; padding: 15px; background: #f4f7f6; color: #333; margin-bottom: 100px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
@@ -11,31 +11,38 @@
         label { display: block; font-size: 0.9em; margin-bottom: 5px; color: #666; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
         
+        /* 버튼 스타일 */
         .btn-box { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; text-align: center; text-decoration: none; }
+        .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; text-align: center; }
         .btn-add { background: #28a745; color: white; width: 100%; margin-bottom: 10px; }
         .btn-copy { background: #007bff; color: white; }
         .btn-sms { background: #ff5722; color: white; width: 100%; margin-top: 10px; }
+        .btn-kakao { background: #fee500; color: #3c1e1e; }
+        .btn-mail { background: #6c757d; color: white; }
         
+        /* 목록 및 자재별 색상 띠 */
         #list-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .item { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 8px; position: relative; font-size: 0.9em; border-left: 6px solid #ccc; }
-        .border-sus { border-left-color: #28a745; }
-        .border-ss400 { border-left-color: #fd7e14; }
-        .border-al { border-left-color: #007bff; }
-        .item-num { color: #28a745; font-weight: bold; margin-right: 5px; }
+        .border-sus { border-left-color: #28a745; } /* SUS: 초록 */
+        .border-ss400 { border-left-color: #fd7e14; } /* SS400: 주황 */
+        .border-al { border-left-color: #007bff; } /* AL: 파랑 */
+        .item-num { color: #28a745; font-weight: bold; margin-right: 5px; font-size: 1.1em; }
         .del-btn { position: absolute; right: 10px; top: 10px; color: #ff4d4d; border: none; background: none; font-weight: bold; cursor: pointer; }
         
+        /* 합계 및 광고 */
         #total-area { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; }
         .total-price { color: #ffeb3b; font-size: 1.2em; font-weight: bold; }
-        
-        .ad-banner { margin: 25px 0; text-align: center; }
+        .ad-banner { margin: 20px 0; text-align: center; }
         .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 999; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-top: 1px solid #eee; }
+        
+        .mail-select { margin-top: 10px; display: none; background: #eee; padding: 10px; border-radius: 5px; width: 100%; }
+        .mail-option { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; text-align: left; background: white; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="text-align:center;">자재비 계산기</h2>
+    <h2 style="text-align:center;">자재비 통합 계산기</h2>
     
     <div class="input-group">
         <label>자재 선택</label>
@@ -55,7 +62,7 @@
     </div>
     
     <div id="square-inputs" class="input-group">
-        <label>치수 (가로 x 세로 mm)</label>
+        <label>치수 (mm)</label>
         <div style="display:flex; gap:5px;">
             <input type="number" id="w" placeholder="가로">
             <input type="number" id="l" placeholder="세로">
@@ -63,7 +70,7 @@
     </div>
     <div id="circle-inputs" class="input-group" style="display:none;">
         <label>지름 (D mm)</label>
-        <input type="number" id="dia" placeholder="지름">
+        <input type="number" id="dia" placeholder="지름 입력">
     </div>
 
     <div class="input-group">
@@ -87,17 +94,34 @@
         총 무게: <span id="total-w">0.000</span> kg / 합계: <span id="total-p" class="total-price">0</span> 원
     </div>
 
-    <button class="btn btn-sms" onclick="sendSms()">📱 010-0000-0000 문자 전송</button>
+    <div class="ad-banner">
+        <a href="tel:010-0000-0000">
+            <img src="ad.jpg" alt="문의하기" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;" onerror="this.src='https://via.placeholder.com/450x100?text=중간+광고+이미지(ad.jpg)'">
+        </a>
+    </div>
 
     <div class="btn-box">
-        <button class="btn btn-copy" onclick="copyList()">📋 양식 복사하기</button>
+        <button class="btn btn-copy" onclick="copyList()">📋 견적 양식 복사</button>
+        <button class="btn btn-kakao" onclick="sendKakao()">카톡 전송</button>
+    </div>
+
+    <button class="btn btn-sms" onclick="sendSms()">📱 010-0000-0000 문자 발송</button>
+
+    <div class="btn-box" style="margin-top:10px;">
+        <button class="btn btn-mail" onclick="toggleMailSelect()">메일 보내기 ▼</button>
         <button class="btn" style="background:#6f42c1; color:white;" onclick="shareSite()">🔗 사이트 공유</button>
+    </div>
+
+    <div id="mail-select-area" class="mail-select">
+        <button class="mail-option" onclick="sendEmail('naver')">N 네이버 메일</button>
+        <button class="mail-option" onclick="sendEmail('daum')">K 카카오(다음) 메일</button>
+        <button class="mail-option" onclick="sendEmail('gmail')">G Gmail</button>
     </div>
 </div>
 
 <div class="fixed-ad">
-    <a href="https://microsoft-ceo.github.io/microsoft/">
-        <img src="bottom_ad.png" alt="하단 광고" style="width: 100%; height: 60px; object-fit: cover; display: block;" onerror="this.src='https://via.placeholder.com/1000x120?text=하단+광고이미지+없음'">
+    <a href="https://open.kakao.com/o/yourid">
+        <img src="bottom_ad.png" alt="하단 광고" style="width: 100%; height: 60px; object-fit: cover; display: block;" onerror="this.src='https://via.placeholder.com/1000x120?text=하단+고정+배너(bottom_ad.png)'">
     </a>
 </div>
 
@@ -121,8 +145,7 @@
         const t = document.getElementById('t').value;
         const up = document.getElementById('unitPrice').value;
         
-        let weight = 0;
-        let dimText = "";
+        let weight = 0; let dimText = "";
 
         if (shape === 'square') {
             const w = document.getElementById('w').value;
@@ -138,8 +161,7 @@
             dimText = `${matName}(환봉) D${dia}*L${t}`;
         }
 
-        const cost = Math.round(weight * up);
-        itemList.push({ id: Date.now(), text: dimText, weight, cost, colorClass });
+        itemList.push({ id: Date.now(), text: dimText, weight, cost: Math.round(weight * up), colorClass });
         renderList();
     }
 
@@ -150,13 +172,12 @@
 
     function renderList() {
         const container = document.getElementById('items');
-        container.innerHTML = "";
-        let tw = 0; let tp = 0;
+        container.innerHTML = ""; let tw = 0; let tp = 0;
         itemList.forEach((item, index) => {
             tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
             div.className = `item ${item.colorClass}`;
-            div.innerHTML = `<span class="item-num">${index + 1}.</span> <b>${item.text}</b><br>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원 <button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
+            div.innerHTML = `<span class="item-num">${index+1}.</span> <b>${item.text}</b><br>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원 <button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
             container.appendChild(div);
         });
         document.getElementById('total-w').innerText = tw.toFixed(3);
@@ -166,12 +187,9 @@
     function getSummary() {
         if(itemList.length === 0) return "";
         let text = "━━━━━━━━━━━━━━\n   [ 자 재  견 적 서 ]\n━━━━━━━━━━━━━━\n";
-        itemList.forEach((item, i) => { 
-            text += `${i+1}. ${item.text}\n   ▶ ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원\n`; 
-        });
+        itemList.forEach((item, i) => { text += `${i+1}. ${item.text}\n   ▶ ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원\n`; });
         text += "━━━━━━━━━━━━━━\n";
-        text += ` 합계 중량: ${document.getElementById('total-w').innerText}kg\n`;
-        text += ` 최종 금액: ${document.getElementById('total-p').innerText}원\n`;
+        text += ` 합계 중량: ${document.getElementById('total-w').innerText}kg\n 최종 금액: ${document.getElementById('total-p').innerText}원\n`;
         text += "━━━━━━━━━━━━━━";
         return text;
     }
@@ -179,19 +197,39 @@
     function copyList() {
         const text = getSummary();
         if(!text) return alert("목록이 비어있습니다.");
-        navigator.clipboard.writeText(text).then(() => alert("깔끔한 견적 양식으로 복사되었습니다!"));
+        navigator.clipboard.writeText(text).then(() => alert("견적 양식이 복사되었습니다!"));
     }
 
     function sendSms() {
         const text = getSummary();
         if(!text) return alert("목록이 비어있습니다.");
-        const smsUrl = `sms:01000000000?body=${encodeURIComponent(text)}`;
-        location.href = smsUrl;
+        location.href = `sms:01000000000?body=${encodeURIComponent(text)}`;
     }
 
-    function shareSite() {
-        navigator.share({ title: '자재비 계산기', url: window.location.href });
+    function sendKakao() {
+        const text = getSummary();
+        if(!text) return alert("목록이 비어있습니다.");
+        if (navigator.share) navigator.share({ title: '자재 견적', text });
+        else copyList();
     }
+
+    function toggleMailSelect() {
+        const area = document.getElementById('mail-select-area');
+        area.style.display = (area.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function sendEmail(service) {
+        const text = getSummary();
+        const subject = encodeURIComponent("자재비 견적 요약");
+        const body = encodeURIComponent(text);
+        let url = "";
+        if(service === 'naver') url = `https://mail.naver.com/v2/compose?subject=${subject}&body=${body}`;
+        else if(service === 'daum') url = `https://mail.kakao.com/talk/v2/compose?subject=${subject}&body=${body}`;
+        else url = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
+        window.open(url, '_blank');
+    }
+
+    function shareSite() { navigator.share({ title: '자재 계산기', url: window.location.href }); }
 </script>
 </body>
 </html>
