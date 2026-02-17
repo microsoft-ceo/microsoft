@@ -48,14 +48,14 @@
         .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 1000; border-top: 1px solid #D1D1D6; display: flex; align-items: center; justify-content: center; }
         .fixed-ad .ad-blink-box { width: 90%; height: 50px; font-size: 14px; margin: 0; border-width: 1px; }
 
-        .mail-select { margin-top: 10px; display: none; background: #F2F2F7; padding: 10px; border-radius: 12px; }
-        .mail-option { width: 100%; padding: 12px; margin-top: 5px; border: none; border-radius: 8px; background: white; font-weight: 500; cursor: pointer; }
+        #print-header { display: none; text-align: center; margin-bottom: 20px; }
+        #print-header h1 { margin-bottom: 5px; }
+        #print-date { font-size: 14px; color: #555; }
 
         @media print {
-            .card, .btn-box, .btn, .fixed-ad, .ad-blink-box, .del-btn, .mail-select, h2 { display: none !important; }
+            .card, .btn-box, .btn, .fixed-ad, .ad-blink-box, .del-btn, h2 { display: none !important; }
             body { background: white; padding: 0; }
-            #items { margin-top: 20px; }
-            #items::before { content: "자재 견적서"; display: block; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 30px; }
+            #print-header { display: block !important; }
             .total-card { background: #EEE !important; color: #000 !important; border: 1px solid #DDD; }
             .total-row strong { color: #000 !important; }
         }
@@ -64,9 +64,13 @@
 <body>
 
 <div class="container">
+    <div id="print-header">
+        <h1>자재 견적서</h1>
+        <div id="print-date"></div>
+    </div>
+
     <div class="card">
         <h2>자재 견적 계산기</h2>
-        
         <div class="input-group">
             <label>자재</label>
             <select id="material">
@@ -75,7 +79,6 @@
                 <option value="2.7" data-class="border-al">알루미늄 (2.7)</option>
             </select>
         </div>
-
         <div class="input-group">
             <label>형태</label>
             <select id="shape" onchange="toggleInputs()">
@@ -84,29 +87,16 @@
                 <option value="hex">육각 (대변 S)</option>
             </select>
         </div>
-        
         <div id="square-inputs" class="input-group">
             <label>치수 (mm)</label>
-            <div style="display:flex; gap:8px;">
-                <input type="number" id="w" placeholder="가로">
-                <input type="number" id="l" placeholder="세로">
-            </div>
+            <div style="display:flex; gap:8px;"><input type="number" id="w" placeholder="가로"><input type="number" id="l" placeholder="세로"></div>
         </div>
         <div id="circle-inputs" class="input-group" style="display:none;">
             <label id="dia-label">지름 (D mm)</label>
             <input type="number" id="dia" placeholder="치수 입력">
         </div>
-
-        <div class="input-group">
-            <label>두께(T) 또는 길이(L) mm</label>
-            <input type="number" id="t" placeholder="입력">
-        </div>
-
-        <div class="input-group">
-            <label>단가 (원/kg)</label>
-            <input type="number" id="unitPrice" value="5000">
-        </div>
-
+        <div class="input-group"><label>두께(T) 또는 길이(L) mm</label><input type="number" id="t" placeholder="입력"></div>
+        <div class="input-group"><label>단가 (원/kg)</label><input type="number" id="unitPrice" value="5000"></div>
         <button class="btn btn-add" onclick="addItem()">목록에 추가</button>
     </div>
 
@@ -122,28 +112,29 @@
     <div class="ad-blink-box">📢 광고 모집 중 (클릭 문의)</div>
 
     <div class="btn-box">
-        <button class="btn btn-pdf" onclick="window.print()">📄 PDF 견적서 저장 / 인쇄</button>
+        <button class="btn btn-pdf" onclick="preparePrint()">📄 PDF 견적서 저장 / 인쇄</button>
         <button class="btn btn-copy" onclick="copyList()">📋 견적 복사</button>
         <button class="btn btn-etc" onclick="shareSite()">🔗 사이트 공유</button>
-        <button class="btn btn-sms" onclick="sendSms()">📱 010-0000-0000 문자 전송</button>
-        <button class="btn btn-etc" onclick="sendKakao()">카톡 전송</button>
-        <button class="btn btn-etc" onclick="toggleMailSelect()">메일 보내기 ▼</button>
-        <button class="btn btn-install" onclick="showInstallGuide()">📲 홈 화면에 앱 설치 안내</button>
-    </div>
-
-    <div id="mail-select-area" class="mail-select">
-        <button class="mail-option" onclick="sendEmail('naver')">네이버 메일</button>
-        <button class="mail-option" onclick="sendEmail('daum')">카카오 메일</button>
-        <button class="mail-option" onclick="sendEmail('gmail')">Gmail</button>
+        <button class="btn btn-sms" onclick="sendSms()">📱 문자 전송</button>
+        <button class="btn btn-etc" onclick="showInstallGuide()">📲 홈 화면에 앱 설치 안내</button>
     </div>
 </div>
 
-<div class="fixed-ad">
-    <div class="ad-blink-box">✨ 하단 배너 광고 모집 중 ✨</div>
-</div>
+<div class="fixed-ad"><div class="ad-blink-box">✨ 하단 배너 광고 모집 중 ✨</div></div>
 
 <script>
     let itemList = [];
+
+    function getDateTime() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    }
 
     function toggleInputs() {
         const s = document.getElementById('shape').value;
@@ -185,8 +176,6 @@
         renderList();
     }
 
-    function deleteItem(id) { itemList = itemList.filter(i => i.id !== id); renderList(); }
-
     function renderList() {
         const container = document.getElementById('items');
         container.innerHTML = ""; let tw = 0; let tp = 0;
@@ -201,48 +190,32 @@
         document.getElementById('total-p').innerText = tp.toLocaleString();
     }
 
+    function deleteItem(id) { itemList = itemList.filter(i => i.id !== id); renderList(); }
+
     function getSum() {
         let s = "━━━━━━━━━━━━━━\n   [ 자 재  견 적 서 ]\n━━━━━━━━━━━━━━\n";
+        s += `일시: ${getDateTime()}\n━━━━━━━━━━━━━━\n`;
         itemList.forEach((item, i) => { s += `${i+1}. ${item.txt}\n   ▶ ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원\n`; });
         s += "━━━━━━━━━━━━━━\n 합계: " + document.getElementById('total-w').innerText + "kg / " + document.getElementById('total-p').innerText + "원\n━━━━━━━━━━━━━━";
         return s;
     }
 
-    function copyList() { navigator.clipboard.writeText(getSum()).then(() => alert("견적서가 복사되었습니다.")); }
-    function sendSms() { location.href = `sms:01000000000?body=${encodeURIComponent(getSum())}`; }
-    function sendKakao() { 
-        const shareTxt = "[자재 견적]\n" + getSum() + "\n\n계산기 바로가기:\n" + window.location.href;
-        if (navigator.share) navigator.share({ title: '자재 견적', text: shareTxt }); 
-        else copyList(); 
+    function preparePrint() {
+        document.getElementById('print-date').innerText = "견적 일시: " + getDateTime();
+        window.print();
     }
-    function toggleMailSelect() { const a = document.getElementById('mail-select-area'); a.style.display = (a.style.display === 'block') ? 'none' : 'block'; }
-    function sendEmail(svc) {
-        const sub = encodeURIComponent("자재비 견적 요약"); const body = encodeURIComponent(getSum());
-        let url = (svc === 'naver') ? `https://mail.naver.com/v2/compose?subject=${sub}&body=${body}` : (svc === 'daum') ? `https://mail.kakao.com/talk/v2/compose?subject=${sub}&body=${body}` : `https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`;
-        window.open(url, '_blank');
-    }
-    function shareSite() { 
-        const url = window.location.href;
-        const text = "현장에서 바로 쓰는 자재비 계산기입니다.\n(카톡으로 보셨다면 '다른 브라우저로 열기' 후 앱으로 설치하세요!)\n\n" + url;
-        if (navigator.share) {
-            navigator.share({ title: '자재비 통합 계산기', text: text, url: url });
-        } else {
-            navigator.clipboard.writeText(text).then(() => alert("사이트 주소와 안내문구가 복사되었습니다."));
-        }
-    }
+
+    function copyList() { navigator.clipboard.writeText(getSum()).then(() => alert("일시가 포함된 견적서가 복사되었습니다.")); }
+    function sendSms() { location.href = `sms:?body=${encodeURIComponent(getSum())}`; }
+    function shareSite() { navigator.share({ title: '자재 계산기', text: "현장용 자재비 계산기입니다.", url: window.location.href }); }
 
     function showInstallGuide() {
         const ua = navigator.userAgent.toLowerCase();
         const isKakao = ua.includes('kakaotalk');
         const isIOS = /ipad|iphone|ipod/.test(ua);
-
-        if (isKakao) {
-            alert("【 카카오톡에서 앱 설치 방법 】\n\n현재 카톡 브라우저에서는 직접 설치가 제한됩니다.\n\n1. 오른쪽 하단 '점 3개(···)' 또는 화살표 클릭\n2. '다른 브라우저로 열기' 선택\n3. 이동 후 이 버튼을 다시 눌러주세요!");
-        } else if (isIOS) {
-            alert("【 아이폰 설치 방법 】\n\n1. 하단 중앙 '공유(□↑)' 클릭\n2. '홈 화면에 추가' 선택\n\n바탕화면에서 앱처럼 편리하게 사용하세요!");
-        } else {
-            alert("【 안드로이드 설치 방법 】\n\n1. 우측 상단 '점 3개(⋮)' 클릭\n2. '홈 화면에 추가' 또는 '앱 설치' 선택");
-        }
+        if (isKakao) alert("【 카톡에서 설치 방법 】\n\n1. 오른쪽 하단 '점 3개' 또는 화살표 클릭\n2. '다른 브라우저로 열기' 선택\n3. 다시 이 버튼을 눌러주세요!");
+        else if (isIOS) alert("【 아이폰 설치 방법 】\n\n1. 하단 중앙 '공유' 클릭\n2. '홈 화면에 추가' 선택");
+        else alert("【 안드로이드 설치 방법 】\n\n1. 우측 상단 '점 3개' 클릭\n2. '홈 화면에 추가' 또는 '앱 설치' 선택");
     }
 </script>
 </body>
