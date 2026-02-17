@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>자재 견적 통합 시스템 v3</title>
+    <title>자재 견적 통합 시스템 v4</title>
     <style>
         :root {
             --ios-blue: #007AFF; --ios-green: #34C759; --ios-orange: #FF9500;
             --ios-purple: #5856D6; --ios-bg: #F2F2F7; --ios-card: #FFFFFF;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--ios-bg); margin: 0; padding: 15px; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 500px; margin: 0 auto; padding-bottom: 140px; }
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 120px; }
         
         /* 탭 디자인 */
         .mode-selector { display: flex; background: #E5E5EA; border-radius: 10px; padding: 2px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .mode-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .mode-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; color: #8E8E93; }
+        .mode-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); color: #000; }
 
         .card { background: var(--ios-card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h2 { font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 20px; color: #1c1c1e; }
@@ -23,17 +23,20 @@
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: 500; color: #8E8E93; margin: 0 0 5px 5px; }
         input, select, textarea { width: 100%; padding: 12px; border: none; background: #F2F2F7; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; }
+        textarea { height: 100px; resize: none; border: 2px dashed var(--ios-green); background: #fff; }
         
         .btn { width: 100%; border: none; border-radius: 12px; font-weight: 600; padding: 14px; cursor: pointer; margin-top: 10px; color: white; transition: 0.2s; }
         .btn-request { background: var(--ios-blue); }
         .btn-calculate { background: var(--ios-green); }
         .btn-pdf { background: var(--ios-purple); margin-top: 15px; }
+        .btn-parse { background: #1C1C1E; font-size: 14px; padding: 12px; margin-top: 8px; }
 
         .item { background: white; padding: 15px; border-radius: 16px; margin-bottom: 10px; border-left: 6px solid #CCC; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .item-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .unit-edit { width: 90px !important; padding: 8px !important; font-size: 14px !important; text-align: right; background: #FFF !important; border: 1px solid var(--ios-blue) !important; color: #000; font-weight: bold; }
         
         .admin-only { display: none; }
+        .user-only { display: block; }
         .total-card { background: #1C1C1E; color: white; border-radius: 15px; padding: 18px; margin-top: 15px; display: none; }
 
         @media print {
@@ -50,20 +53,20 @@
 
 <div class="container">
     <div class="mode-selector">
-        <button id="user-mode-btn" class="mode-btn active" onclick="switchMode('user')">고객 (견적요청)</button>
-        <button id="admin-mode-btn" class="mode-btn" onclick="switchMode('admin')">업체 (단가산출)</button>
+        <button id="user-mode-btn" class="mode-btn active" onclick="switchMode('user')">① 고객 (견적요청)</button>
+        <button id="admin-mode-btn" class="mode-btn" onclick="switchMode('admin')">② 업체 (단가산출)</button>
     </div>
 
-    <div class="card admin-only admin-parse-area" style="border: 2px solid var(--ios-blue);">
-        <label style="color:var(--ios-blue); font-weight:bold;">📩 고객 문자 붙여넣기</label>
-        <textarea id="rawText" placeholder="고객이 보낸 100*200*10 형식 문자를 넣으세요"></textarea>
-        <button class="btn" style="background:#1C1C1E; font-size:13px; padding:10px;" onclick="parseText()">자동 분석 후 목록 추가</button>
+    <div class="card admin-only admin-parse-area" style="border: 2px solid var(--ios-green);">
+        <label style="color:var(--ios-green); font-weight:bold; font-size:14px;">📩 고객 문자 붙여넣기 (전체)</label>
+        <textarea id="rawText" placeholder="고객이 보낸 문자를 통째로 여기에 붙여넣으세요. (여러 줄 가능)"></textarea>
+        <button class="btn btn-parse" onclick="parseText()">🔍 자동 분석하여 목록에 추가</button>
     </div>
 
     <div class="card">
         <h2 id="title">자재 견적 요청</h2>
         <div class="input-group">
-            <label>자재/형태</label>
+            <label>자재 / 형태</label>
             <div style="display:flex; gap:5px;">
                 <select id="material" style="flex:1;">
                     <option value="7.93">SUS304</option>
@@ -79,7 +82,7 @@
 
         <div id="square-inputs" class="input-group">
             <label>가로 x 세로 (mm)</label>
-            <div style="display:flex; gap:8px;"><input type="number" id="w" placeholder="가로"><input type="number" id="l" placeholder="세로"></div>
+            <div style="display:flex; gap:5px;"><input type="number" id="w" placeholder="가로"><input type="number" id="l" placeholder="세로"></div>
         </div>
         <div id="circle-inputs" class="input-group" style="display:none;">
             <label>지름 (D mm)</label>
@@ -112,7 +115,7 @@
     </div>
 
     <button class="btn btn-pdf admin-only" onclick="generatePdf()">📄 정식 견적서 PDF 발행</button>
-    <button id="send-btn" class="btn btn-request" onclick="sendToOwner()">📩 업체에 견적 요청 (문자전송)</button>
+    <button id="send-btn" class="btn btn-request user-only" onclick="sendToOwner()">📩 업체에 견적 요청 (문자전송)</button>
 </div>
 
 <script>
@@ -124,14 +127,21 @@
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(mode + '-mode-btn').classList.add('active');
         
-        // 업체용 요소들 제어
-        document.querySelectorAll('.admin-only').forEach(e => e.style.display = (mode === 'admin' ? 'block' : 'none'));
-        
-        document.getElementById('title').innerText = (mode === 'admin' ? "개별 단가 산출 (업체용)" : "자재 견적 요청");
-        document.getElementById('main-btn').className = "btn " + (mode === 'admin' ? "btn-calculate" : "btn-request");
-        document.getElementById('main-btn').innerText = (mode === 'admin' ? "목록에 수동 추가" : "목록에 추가");
-        document.getElementById('send-btn').style.display = (mode === 'admin' ? 'none' : 'block');
-        
+        // 모드에 따라 표시 요소 제어
+        if (mode === 'admin') {
+            document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'block');
+            document.querySelectorAll('.user-only').forEach(e => e.style.display = 'none');
+            document.getElementById('title').innerText = "개별 단가 산출 (업체용)";
+            document.getElementById('main-btn').className = "btn btn-calculate";
+            document.getElementById('main-btn').innerText = "목록에 수동 추가";
+        } else {
+            // 고객 모드로 돌아올 때 목록 초기화 여부 (선택사항, 현재는 유지)
+            document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
+            document.querySelectorAll('.user-only').forEach(e => e.style.display = 'block');
+            document.getElementById('title').innerText = "자재 견적 요청";
+            document.getElementById('main-btn').className = "btn btn-request";
+            document.getElementById('main-btn').innerText = "목록에 추가";
+        }
         renderList();
     }
 
@@ -147,8 +157,6 @@
         const g = parseFloat(opt.value);
         const shape = document.getElementById('shape').value;
         const t = document.getElementById('t').value / 10;
-        
-        // 업체용 모드면 현재 입력된 단가 사용, 고객용이면 단가 0으로 세팅
         const up = currentMode === 'admin' ? parseInt(document.getElementById('unitPrice').value) : 0;
         
         let wgt = 0; let txt = "";
@@ -168,7 +176,6 @@
         renderList();
     }
 
-    // 단가 입력 시 실시간 합계 반영 로직 추가
     function updateItemUnit(id, newUnit) {
         const idx = itemList.findIndex(item => item.id == id);
         if(idx > -1) {
@@ -178,7 +185,7 @@
                 const newCost = Math.round(itemList[idx].weight * itemList[idx].unit);
                 costDisplay.innerText = newCost.toLocaleString() + "원";
             }
-            renderTotal(); // 하단 총합계 즉시 갱신
+            renderTotal();
         }
     }
 
@@ -203,7 +210,7 @@
                     </span>
                 </div>`;
             } else {
-                html += `<p style="font-size:13px; color:#8E8E93; margin-top:5px;">상세 견적 확인 중...</p>`;
+                html += `<p style="font-size:13px; color:#8E8E93; margin-top:5px;">견적 산출 대기 중</p>`;
             }
             html += `<button onclick="deleteItem(${item.id})" class="del-btn" style="position:absolute; right:12px; top:12px; border:none; background:none; color:#FF3B30; font-size:12px; cursor:pointer;">삭제</button>`;
             div.innerHTML = html;
@@ -224,23 +231,52 @@
 
     function deleteItem(id) { itemList = itemList.filter(i => i.id !== id); renderList(); }
 
+    // 🚀 수정된 파싱 로직: 여러 줄의 데이터를 모두 읽어서 추가함
     function parseText() {
         const raw = document.getElementById('rawText').value;
+        if(!raw) return alert("분석할 문자가 없습니다.");
+
         const defaultUp = parseInt(document.getElementById('unitPrice').value);
-        const lines = raw.split('\n');
+        
+        // 줄바꿈으로 나누고, 빈 줄 제거
+        const lines = raw.split(/\r?\n/).filter(line => line.trim() !== "");
+        let count = 0;
+
         lines.forEach(line => {
-            const match = line.match(/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/);
+            // 정규식: 숫자*숫자*숫자 패턴을 찾음 (공백 허용)
+            // 예: 100*200*10 또는 100 * 200 * 10
+            const match = line.match(/(\d+(?:\.\d+)?)\s*[\*xX]\s*(\d+(?:\.\d+)?)\s*[\*xX]\s*(\d+(?:\.\d+)?)/);
+            
             if (match) {
-                const w = parseFloat(match[1])/10; const l = parseFloat(match[2])/10; const t = parseFloat(match[3])/10;
+                const w = parseFloat(match[1])/10; 
+                const l = parseFloat(match[2])/10; 
+                const t = parseFloat(match[3])/10;
+                
                 let g = 7.93; let name = "SUS304";
-                if(line.includes("SS400")) { g = 7.85; name = "SS400"; }
-                else if(line.includes("알루미늄") || line.includes("AL")) { g = 2.7; name = "알루미늄"; }
+                if(line.toUpperCase().includes("SS400") || line.includes("일반강")) { g = 7.85; name = "SS400"; }
+                else if(line.toUpperCase().includes("AL") || line.includes("알루미늄")) { g = 2.7; name = "알루미늄"; }
+                
+                // 무게 계산
                 const wgt = (w * l * t * g) / 1000;
-                itemList.push({ id: Date.now()+Math.random(), txt: `${name}(사각) ${w*10}*${l*10}*${t*10}`, weight: wgt, unit: defaultUp });
+                
+                // 목록에 추가
+                itemList.push({ 
+                    id: Date.now() + Math.random(), // 고유 ID 생성
+                    txt: `${name}(사각) ${w*10}*${l*10}*${t*10}`, 
+                    weight: wgt, 
+                    unit: defaultUp 
+                });
+                count++;
             }
         });
-        renderList();
-        document.getElementById('rawText').value = "";
+
+        if (count > 0) {
+            alert(`${count}개의 품목을 성공적으로 불러왔습니다.`);
+            renderList();
+            document.getElementById('rawText').value = ""; // 입력창 초기화
+        } else {
+            alert("규격 형식을 찾을 수 없습니다.\n(예: 100*200*10)");
+        }
     }
 
     function generatePdf() {
