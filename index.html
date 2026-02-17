@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>자재 견적 마스터 시스템</title>
+    <title>자재 견적 통합 시스템 v2</title>
     <style>
         :root {
             --ios-blue: #007AFF; --ios-green: #34C759; --ios-orange: #FF9500;
@@ -12,36 +12,39 @@
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--ios-bg); margin: 0; padding: 15px; -webkit-font-smoothing: antialiased; }
         .container { max-width: 500px; margin: 0 auto; padding-bottom: 120px; }
         
+        /* 탭 디자인 */
         .mode-selector { display: flex; background: #E5E5EA; border-radius: 10px; padding: 2px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .mode-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         .card { background: var(--ios-card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 20px; }
+        h2 { font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 20px; }
         
         .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 13px; font-weight: 500; color: #8E8E93; margin: 0 0 5px 5px; }
+        label { display: block; font-size: 12px; font-weight: 500; color: #8E8E93; margin: 0 0 5px 5px; }
         input, select, textarea { width: 100%; padding: 12px; border: none; background: #F2F2F7; border-radius: 12px; font-size: 15px; outline: none; box-sizing: border-box; }
-        textarea { height: 80px; resize: none; border: 1px dashed var(--ios-blue); }
-
+        
+        /* 버튼 스타일 */
         .btn { width: 100%; border: none; border-radius: 12px; font-weight: 600; padding: 14px; cursor: pointer; margin-top: 10px; color: white; transition: 0.2s; }
-        .btn:active { opacity: 0.7; }
         .btn-request { background: var(--ios-blue); }
         .btn-calculate { background: var(--ios-green); }
-        .btn-pdf { background: var(--ios-purple); margin-top: 20px; }
-        .btn-parse { background: #1C1C1E; font-size: 13px; padding: 10px; margin-top: 5px; }
+        .btn-pdf { background: var(--ios-purple); margin-top: 15px; }
 
-        .item { background: white; padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 5px solid #CCC; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .admin-only { display: none; }
+        /* 목록 아이템 (개별 단가 수정용) */
+        .item { background: white; padding: 15px; border-radius: 16px; margin-bottom: 10px; border-left: 6px solid #CCC; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .item-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .unit-edit { width: 80px !important; padding: 5px !important; font-size: 13px !important; text-align: right; background: #FFF !important; border: 1px solid #DDD !important; }
         
-        .total-card { background: #1C1C1E; color: white; border-radius: 15px; padding: 15px; margin-top: 15px; display: none; }
-        .date-info { text-align: center; font-size: 11px; color: #8E8E93; margin-bottom: 10px; }
+        .admin-only { display: none; }
+        .total-card { background: #1C1C1E; color: white; border-radius: 15px; padding: 18px; margin-top: 15px; display: none; }
 
         @media print {
-            .mode-selector, .card, .btn, .ad-box, .del-btn, .admin-parse-area { display: none !important; }
+            .mode-selector, .card, .btn, .del-btn, .admin-parse-area, .unit-edit-label { display: none !important; }
             body { background: white; padding: 0; }
-            .total-card { display: block !important; background: #F9F9F9 !important; color: #000 !important; border: 1px solid #000; }
-            .item { border: 1px solid #EEE; border-left: 5px solid #CCC; box-shadow: none; }
+            .item { border: 1px solid #EEE; border-left: 6px solid #CCC; break-inside: avoid; }
+            .unit-val { display: inline !important; font-weight: bold; }
+            .unit-edit { display: none !important; }
+            .total-card { display: block !important; background: #F2F2F7 !important; color: #000 !important; border: 1px solid #000; }
         }
     </style>
 </head>
@@ -49,34 +52,31 @@
 
 <div class="container">
     <div class="mode-selector">
-        <button id="user-mode-btn" class="mode-btn active" onclick="switchMode('user')">고객용 (요청)</button>
-        <button id="admin-mode-btn" class="mode-btn" onclick="switchMode('admin')">업체용 (산출)</button>
+        <button id="user-mode-btn" class="mode-btn active" onclick="switchMode('user')">고객 (견적요청)</button>
+        <button id="admin-mode-btn" class="mode-btn" onclick="switchMode('admin')">업체 (개별단가산출)</button>
     </div>
 
     <div class="card admin-only admin-parse-area" style="border: 2px solid var(--ios-blue);">
-        <label style="color:var(--ios-blue); font-weight:bold;">📩 받은 문자 붙여넣기 (자동 분석)</label>
-        <textarea id="rawText" placeholder="고객이 보낸 견적 요청 문자를 여기에 붙여넣으세요."></textarea>
-        <button class="btn btn-parse" onclick="parseText()">자동 분석 후 목록 추가</button>
+        <label style="color:var(--ios-blue); font-weight:bold;">📩 문자 붙여넣기</label>
+        <textarea id="rawText" placeholder="규격을 복사해 넣으세요 (예: 100*200*10)"></textarea>
+        <button class="btn" style="background:#1C1C1E; font-size:13px; padding:10px;" onclick="parseText()">자동 분석 추가</button>
     </div>
 
     <div class="card">
         <h2 id="title">자재 견적 요청</h2>
-        
         <div class="input-group">
-            <label>자재</label>
-            <select id="material">
-                <option value="7.93">SUS303/304</option>
-                <option value="7.85">SS400 (일반강)</option>
-                <option value="2.7">알루미늄</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>형태</label>
-            <select id="shape" onchange="toggleInputs()">
-                <option value="square">사각판 (가로x세로)</option>
-                <option value="circle">환봉 (지름)</option>
-            </select>
+            <label>자재/형태</label>
+            <div style="display:flex; gap:5px;">
+                <select id="material" style="flex:1;">
+                    <option value="7.93">SUS304</option>
+                    <option value="7.85">SS400</option>
+                    <option value="2.7">알루미늄</option>
+                </select>
+                <select id="shape" style="flex:1;" onchange="toggleInputs()">
+                    <option value="square">사각판</option>
+                    <option value="circle">환봉</option>
+                </select>
+            </div>
         </div>
 
         <div id="square-inputs" class="input-group">
@@ -94,7 +94,7 @@
         </div>
 
         <div class="input-group admin-only">
-            <label>적용 단가 (원/kg)</label>
+            <label>적용 단가 (kg당)</label>
             <input type="number" id="unitPrice" value="5000">
         </div>
 
@@ -104,15 +104,17 @@
     <div id="items"></div>
 
     <div class="total-card admin-only">
-        <div id="print-date-display" class="date-info" style="color: #fff;"></div>
-        <div style="display:flex; justify-content:space-between; font-size:14px;"><span>총 중량</span><span id="total-w">0.000</span>kg</div>
-        <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #444; padding-top:10px;">
-            <span>최종 합계</span><strong id="total-p" style="color:#FFD60A; font-size:20px;">0</strong>원
+        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+            <span>총 중량: <strong id="total-w">0.000</strong> kg</span>
+            <span id="print-date" style="font-size:11px; color:#AAA;"></span>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-top:1px solid #444; padding-top:12px;">
+            <span style="font-weight:bold;">최종 합계</span><strong id="total-p" style="color:#FFD60A; font-size:20px;">0</strong>원
         </div>
     </div>
 
-    <button class="btn btn-pdf admin-only" onclick="generatePdf()">📄 정식 견적서 PDF 발행</button>
-    <button id="send-btn" class="btn btn-request" onclick="sendToOwner()">📩 업체에 견적 요청 (문자전송)</button>
+    <button class="btn btn-pdf admin-only" onclick="generatePdf()">📄 개별 단가 견적서 PDF 발행</button>
+    <button id="send-btn" class="btn btn-request" onclick="sendToOwner()">📩 업체에 견적 요청</button>
 </div>
 
 <script>
@@ -123,25 +125,10 @@
         currentMode = mode;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(mode + '-mode-btn').classList.add('active');
-        
-        const adminElements = document.querySelectorAll('.admin-only');
-        const title = document.getElementById('title');
-        const mainBtn = document.getElementById('main-btn');
-        const sendBtn = document.getElementById('send-btn');
-
-        if (mode === 'admin') {
-            adminElements.forEach(e => e.style.display = 'block');
-            title.innerText = "자재 견적 산출 (관리자)";
-            mainBtn.innerText = "수동 추가";
-            mainBtn.className = "btn btn-calculate";
-            sendBtn.style.display = 'none';
-        } else {
-            adminElements.forEach(e => e.style.display = 'none');
-            title.innerText = "자재 견적 요청";
-            mainBtn.innerText = "목록에 추가";
-            mainBtn.className = "btn btn-request";
-            sendBtn.style.display = 'block';
-        }
+        document.querySelectorAll('.admin-only').forEach(e => e.style.display = (mode === 'admin' ? 'block' : 'none'));
+        document.getElementById('title').innerText = (mode === 'admin' ? "개별 단가 산출 (업체용)" : "자재 견적 요청");
+        document.getElementById('main-btn').className = "btn " + (mode === 'admin' ? "btn-calculate" : "btn-request");
+        document.getElementById('send-btn').style.display = (mode === 'admin' ? 'none' : 'block');
         renderList();
     }
 
@@ -157,7 +144,7 @@
         const g = parseFloat(opt.value);
         const shape = document.getElementById('shape').value;
         const t = document.getElementById('t').value / 10;
-        const up = document.getElementById('unitPrice').value;
+        const up = parseInt(document.getElementById('unitPrice').value);
         
         let wgt = 0; let txt = "";
         if (shape === 'square') {
@@ -172,58 +159,53 @@
             wgt = (Math.pow(d/2, 2) * Math.PI * t * g) / 1000;
             txt = `${opt.text}(환봉) D${d*10}*L${t*10}`;
         }
-        itemList.push({ id: Date.now(), txt, weight: wgt, cost: Math.round(wgt * up) });
+        itemList.push({ id: Date.now(), txt, weight: wgt, unit: up });
         renderList();
     }
 
-    // 🚀 문자 자동 분석 로직
-    function parseText() {
-        const rawText = document.getElementById('rawText').value;
-        if(!rawText) return alert("문자 내용을 붙여넣으세요.");
-        
-        const up = document.getElementById('unitPrice').value;
-        const lines = rawText.split('\n');
-        let count = 0;
-
-        lines.forEach(line => {
-            // 정규식으로 숫자*숫자*숫자 형태 추출
-            const match = line.match(/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/);
-            if (match) {
-                const w = parseFloat(match[1]) / 10;
-                const l = parseFloat(match[2]) / 10;
-                const t = parseFloat(match[3]) / 10;
-                
-                // 자재 판별 (문자열에 포함된 단어 기준)
-                let g = 7.93; let matName = "SUS303/304";
-                if(line.includes("SS400") || line.includes("일반강")) { g = 7.85; matName = "SS400"; }
-                else if(line.includes("알루미늄") || line.includes("AL")) { g = 2.7; matName = "알루미늄"; }
-
-                const wgt = (w * l * t * g) / 1000;
-                itemList.push({ id: Date.now() + Math.random(), txt: `${matName}(사각) ${w*10}*${l*10}*${t*10}`, weight: wgt, cost: Math.round(wgt * up) });
-                count++;
-            }
-        });
-
-        if(count > 0) {
-            alert(count + "개의 항목을 분석하여 추가했습니다.");
-            document.getElementById('rawText').value = "";
-            renderList();
-        } else {
-            alert("분석 가능한 규격 형식이 없습니다. (예: 100*100*10)");
+    function updateItemUnit(id, newUnit) {
+        const idx = itemList.findIndex(item => item.id == id);
+        if(idx > -1) {
+            itemList[idx].unit = parseInt(newUnit) || 0;
+            renderTotal();
         }
     }
 
     function renderList() {
         const container = document.getElementById('items');
-        container.innerHTML = ""; let tw = 0; let tp = 0;
+        container.innerHTML = "";
         itemList.forEach((item, i) => {
-            tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
             div.className = 'item';
-            div.innerHTML = `<b>${i+1}. ${item.txt}</b>` + 
-                (currentMode === 'admin' ? `<p>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p>` : `<p>견적 대기 중</p>`) +
-                `<button onclick="deleteItem(${item.id})" style="position:absolute; right:10px; top:10px; border:none; background:none; color:red; cursor:pointer;">삭제</button>`;
+            const cost = Math.round(item.weight * item.unit);
+            
+            let html = `<b>${i+1}. ${item.txt}</b>`;
+            if (currentMode === 'admin') {
+                html += `
+                <div class="item-row">
+                    <span style="font-size:13px; color:#666;">${item.weight.toFixed(3)}kg</span>
+                    <span>
+                        <label class="unit-edit-label" style="font-size:11px; color:#999;">단가:</label>
+                        <input type="number" class="unit-edit" value="${item.unit}" onchange="updateItemUnit(${item.id}, this.value)">
+                        <b class="unit-val" style="display:none;">@${item.unit.toLocaleString()}</b>
+                        <b style="margin-left:5px; color:var(--ios-blue);">${cost.toLocaleString()}원</b>
+                    </span>
+                </div>`;
+            } else {
+                html += `<p style="font-size:13px; color:#8E8E93; margin-top:5px;">견적 대기 중</p>`;
+            }
+            html += `<button onclick="deleteItem(${item.id})" class="del-btn" style="position:absolute; right:12px; top:12px; border:none; background:none; color:#FF3B30; font-size:12px; cursor:pointer;">삭제</button>`;
+            div.innerHTML = html;
             container.appendChild(div);
+        });
+        renderTotal();
+    }
+
+    function renderTotal() {
+        let tw = 0; let tp = 0;
+        itemList.forEach(item => {
+            tw += item.weight;
+            tp += Math.round(item.weight * item.unit);
         });
         document.getElementById('total-w').innerText = tw.toFixed(3);
         document.getElementById('total-p').innerText = tp.toLocaleString();
@@ -231,17 +213,33 @@
 
     function deleteItem(id) { itemList = itemList.filter(i => i.id !== id); renderList(); }
 
+    function parseText() {
+        const raw = document.getElementById('rawText').value;
+        const defaultUp = parseInt(document.getElementById('unitPrice').value);
+        const lines = raw.split('\n');
+        lines.forEach(line => {
+            const match = line.match(/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/);
+            if (match) {
+                const w = parseFloat(match[1])/10; const l = parseFloat(match[2])/10; const t = parseFloat(match[3])/10;
+                let g = 7.93; let name = "SUS304";
+                if(line.includes("SS400")) { g = 7.85; name = "SS400"; }
+                else if(line.includes("알루미늄") || line.includes("AL")) { g = 2.7; name = "알루미늄"; }
+                const wgt = (w * l * t * g) / 1000;
+                itemList.push({ id: Date.now()+Math.random(), txt: `${name}(사각) ${w*10}*${l*10}*${t*10}`, weight: wgt, unit: defaultUp });
+            }
+        });
+        renderList();
+        document.getElementById('rawText').value = "";
+    }
+
     function generatePdf() {
-        const now = new Date();
-        document.getElementById('print-date-display').innerText = "발행일시: " + now.toLocaleString();
+        document.getElementById('print-date').innerText = "발행일시: " + new Date().toLocaleString();
         window.print();
     }
 
     function sendToOwner() {
-        if(itemList.length === 0) return alert("목록을 추가해주세요.");
         let s = "[자재 견적 요청]\n";
         itemList.forEach((item, i) => { s += `${i+1}. ${item.txt}\n`; });
-        s += "\n견적 부탁드립니다.";
         location.href = `sms:01000000000?body=${encodeURIComponent(s)}`;
     }
 </script>
