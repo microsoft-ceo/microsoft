@@ -48,16 +48,38 @@
         .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 1000; border-top: 1px solid #D1D1D6; display: flex; align-items: center; justify-content: center; }
         .fixed-ad .ad-blink-box { width: 90%; height: 50px; font-size: 14px; margin: 0; border-width: 1px; }
 
-        #print-header { display: none; text-align: center; margin-bottom: 20px; }
-        #print-header h1 { margin-bottom: 5px; }
-        #print-date { font-size: 14px; color: #555; }
+        #print-header { display: none; text-align: center; margin-bottom: 15px; }
+        #print-date { font-size: 12px; color: #666; }
 
+        /* 🖨️ PDF 출력 최적화 스타일 */
         @media print {
-            .card, .btn-box, .btn, .fixed-ad, .ad-blink-box, .del-btn, h2 { display: none !important; }
+            @page { margin: 10mm; } /* 인쇄 여백 최소화 */
             body { background: white; padding: 0; }
-            #print-header { display: block !important; }
-            .total-card { background: #EEE !important; color: #000 !important; border: 1px solid #DDD; }
-            .total-row strong { color: #000 !important; }
+            .container { max-width: 100%; padding: 0; }
+            .card, .btn-box, .btn, .fixed-ad, .ad-blink-box, .del-btn, h2 { display: none !important; }
+            #print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            #items .item { 
+                box-shadow: none !important; 
+                margin-bottom: 0 !important; 
+                padding: 6px 10px !important; 
+                border-radius: 0 !important; 
+                border: none !important;
+                border-bottom: 1px solid #EEE !important;
+                border-left: 4px solid #CCC !important;
+                font-size: 12px !important;
+            }
+            .item-info b { font-size: 13px !important; }
+            .item-info p { margin-top: 2px !important; font-size: 11px !important; }
+            .total-card { 
+                background: #F9F9F9 !important; 
+                color: #000 !important; 
+                border: 1px solid #333 !important; 
+                margin-top: 10px !important; 
+                padding: 12px !important;
+                border-radius: 8px !important;
+            }
+            .total-row { margin-bottom: 4px !important; font-size: 12px !important; }
+            .total-row strong { color: #000 !important; font-size: 15px !important; }
         }
     </style>
 </head>
@@ -65,7 +87,7 @@
 
 <div class="container">
     <div id="print-header">
-        <h1>자재 견적서</h1>
+        <h1 style="margin:0 0 5px 0; font-size:20px;">자재 견적서</h1>
         <div id="print-date"></div>
     </div>
 
@@ -104,7 +126,7 @@
 
     <div class="total-card">
         <div class="total-row"><span>총 중량</span><span id="total-w">0.000</span> kg</div>
-        <div class="total-row" style="margin-top:10px; padding-top:10px; border-top:1px solid #3A3A3C;">
+        <div class="total-row" style="margin-top:5px; padding-top:5px; border-top:1px solid #CCC;">
             <span>최종 합계</span><strong id="total-p">0</strong> 원
         </div>
     </div>
@@ -127,13 +149,7 @@
 
     function getDateTime() {
         const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     }
 
     function toggleInputs() {
@@ -183,7 +199,7 @@
             tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
             div.className = `item ${item.color}`;
-            div.innerHTML = `<div class="item-info"><span style="color:#34C759;font-weight:bold;">${i+1}.</span> <b>${item.txt}</b><p style="margin:4px 0 0 0;font-size:13px;color:#8E8E93;">${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p></div><button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
+            div.innerHTML = `<div class="item-info"><span style="color:#34C759;font-weight:bold;">${i+1}.</span> <b>${item.txt}</b><p>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p></div><button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
             container.appendChild(div);
         });
         document.getElementById('total-w').innerText = tw.toFixed(3);
@@ -193,8 +209,7 @@
     function deleteItem(id) { itemList = itemList.filter(i => i.id !== id); renderList(); }
 
     function getSum() {
-        let s = "━━━━━━━━━━━━━━\n   [ 자 재  견 적 서 ]\n━━━━━━━━━━━━━━\n";
-        s += `일시: ${getDateTime()}\n━━━━━━━━━━━━━━\n`;
+        let s = "━━━━━━━━━━━━━━\n   [ 자 재  견 적 서 ]\n━━━━━━━━━━━━━━\n 일시: " + getDateTime() + "\n━━━━━━━━━━━━━━\n";
         itemList.forEach((item, i) => { s += `${i+1}. ${item.txt}\n   ▶ ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원\n`; });
         s += "━━━━━━━━━━━━━━\n 합계: " + document.getElementById('total-w').innerText + "kg / " + document.getElementById('total-p').innerText + "원\n━━━━━━━━━━━━━━";
         return s;
@@ -205,17 +220,13 @@
         window.print();
     }
 
-    function copyList() { navigator.clipboard.writeText(getSum()).then(() => alert("일시가 포함된 견적서가 복사되었습니다.")); }
+    function copyList() { navigator.clipboard.writeText(getSum()).then(() => alert("견적서가 복사되었습니다.")); }
     function sendSms() { location.href = `sms:?body=${encodeURIComponent(getSum())}`; }
-    function shareSite() { navigator.share({ title: '자재 계산기', text: "현장용 자재비 계산기입니다.", url: window.location.href }); }
-
+    function shareSite() { navigator.share({ title: '자재 계산기', url: window.location.href }); }
     function showInstallGuide() {
         const ua = navigator.userAgent.toLowerCase();
-        const isKakao = ua.includes('kakaotalk');
-        const isIOS = /ipad|iphone|ipod/.test(ua);
-        if (isKakao) alert("【 카톡에서 설치 방법 】\n\n1. 오른쪽 하단 '점 3개' 또는 화살표 클릭\n2. '다른 브라우저로 열기' 선택\n3. 다시 이 버튼을 눌러주세요!");
-        else if (isIOS) alert("【 아이폰 설치 방법 】\n\n1. 하단 중앙 '공유' 클릭\n2. '홈 화면에 추가' 선택");
-        else alert("【 안드로이드 설치 방법 】\n\n1. 우측 상단 '점 3개' 클릭\n2. '홈 화면에 추가' 또는 '앱 설치' 선택");
+        if (ua.includes('kakaotalk')) alert("【 카톡에서 설치 방법 】\n\n1. 우측 하단 '점 3개' 클릭\n2. '다른 브라우저로 열기' 선택\n3. 이동 후 설치 버튼 재클릭");
+        else alert("홈 화면에 추가하여 앱처럼 사용하세요!");
     }
 </script>
 </body>
