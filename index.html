@@ -3,193 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>자재비 통합 계산기</title>
+    <title>자재 견적 마스터 시스템</title>
     <style>
         :root {
-            --ios-blue: #007AFF;
-            --ios-green: #34C759;
-            --ios-orange: #FF9500;
-            --ios-purple: #5856D6;
-            --ios-bg: #F2F2F7;
-            --ios-card: #FFFFFF;
+            --ios-blue: #007AFF; --ios-green: #34C759; --ios-orange: #FF9500;
+            --ios-purple: #5856D6; --ios-bg: #F2F2F7; --ios-card: #FFFFFF;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--ios-bg); margin: 0; padding: 20px; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 500px; margin: 0 auto; padding-bottom: 140px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--ios-bg); margin: 0; padding: 15px; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 120px; }
         
+        .mode-selector { display: flex; background: #E5E5EA; border-radius: 10px; padding: 2px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .mode-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
         .card { background: var(--ios-card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 25px; letter-spacing: -0.5px; }
-        .input-group { margin-bottom: 16px; }
-        label { display: block; font-size: 13px; font-weight: 500; color: #8E8E93; margin-left: 5px; margin-bottom: 6px; }
-        input, select { width: 100%; padding: 12px 16px; border: none; background: #F2F2F7; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; }
+        h2 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 20px; }
+        
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; font-weight: 500; color: #8E8E93; margin: 0 0 5px 5px; }
+        input, select, textarea { width: 100%; padding: 12px; border: none; background: #F2F2F7; border-radius: 12px; font-size: 15px; outline: none; box-sizing: border-box; }
+        textarea { height: 80px; resize: none; border: 1px dashed var(--ios-blue); }
 
-        .btn-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn { border: none; border-radius: 12px; font-weight: 600; font-size: 15px; padding: 14px; cursor: pointer; text-align: center; transition: opacity 0.2s; }
+        .btn { width: 100%; border: none; border-radius: 12px; font-weight: 600; padding: 14px; cursor: pointer; margin-top: 10px; color: white; transition: 0.2s; }
         .btn:active { opacity: 0.7; }
-        .btn-add { background: var(--ios-green); color: white; width: 100%; margin-bottom: 10px; }
-        .btn-pdf { background: var(--ios-purple); color: white; grid-column: span 2; margin-top: 10px; }
-        .btn-copy { background: var(--ios-blue); color: white; }
-        .btn-etc { background: #E5E5EA; color: #000; }
-        .btn-sms { background: var(--ios-orange); color: white; grid-column: span 2; margin-top: 10px; }
-        .btn-install { background: #1C1C1E; color: #fff; grid-column: span 2; margin-top: 10px; }
+        .btn-request { background: var(--ios-blue); }
+        .btn-calculate { background: var(--ios-green); }
+        .btn-pdf { background: var(--ios-purple); margin-top: 20px; }
+        .btn-parse { background: #1C1C1E; font-size: 13px; padding: 10px; margin-top: 5px; }
 
-        #items .item { background: white; padding: 16px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 6px solid #CCC; }
-        .border-sus { border-left-color: var(--ios-green); }
-        .border-ss400 { border-left-color: var(--ios-orange); }
-        .border-al { border-left-color: var(--ios-blue); }
-        .del-btn { color: #FF3B30; font-weight: 600; font-size: 13px; border: none; background: none; cursor: pointer; }
+        .item { background: white; padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 5px solid #CCC; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .admin-only { display: none; }
+        
+        .total-card { background: #1C1C1E; color: white; border-radius: 15px; padding: 15px; margin-top: 15px; display: none; }
+        .date-info { text-align: center; font-size: 11px; color: #8E8E93; margin-bottom: 10px; }
 
-        .total-card { background: #1C1C1E; color: white; border-radius: 20px; padding: 20px; margin-top: 20px; }
-        .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-        .total-row strong { font-size: 18px; color: #FFD60A; }
-
-        @keyframes blinker { from { opacity: 1.0; } 50% { opacity: 0.1; } to { opacity: 1.0; } }
-        .ad-blink-box { background: #E5E5EA; border: 2px dashed var(--ios-blue); border-radius: 12px; height: 80px; display: flex; align-items: center; justify-content: center; color: var(--ios-blue); font-weight: 800; font-size: 18px; animation: blinker 1.2s linear infinite; text-decoration: none; margin: 20px 0; text-align: center; }
-
-        .fixed-ad { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 1000; border-top: 1px solid #D1D1D6; display: flex; align-items: center; justify-content: center; }
-        .fixed-ad .ad-blink-box { width: 90%; height: 50px; font-size: 14px; margin: 0; border-width: 1px; }
-
-        #print-header { display: none; text-align: center; margin-bottom: 15px; }
-        #print-date { font-size: 12px; color: #666; }
-
-        /* 🖨️ PDF 출력 최적화 스타일 */
         @media print {
-            @page { margin: 10mm; } /* 인쇄 여백 최소화 */
+            .mode-selector, .card, .btn, .ad-box, .del-btn, .admin-parse-area { display: none !important; }
             body { background: white; padding: 0; }
-            .container { max-width: 100%; padding: 0; }
-            .card, .btn-box, .btn, .fixed-ad, .ad-blink-box, .del-btn, h2 { display: none !important; }
-            #print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            #items .item { 
-                box-shadow: none !important; 
-                margin-bottom: 0 !important; 
-                padding: 6px 10px !important; 
-                border-radius: 0 !important; 
-                border: none !important;
-                border-bottom: 1px solid #EEE !important;
-                border-left: 4px solid #CCC !important;
-                font-size: 12px !important;
-            }
-            .item-info b { font-size: 13px !important; }
-            .item-info p { margin-top: 2px !important; font-size: 11px !important; }
-            .total-card { 
-                background: #F9F9F9 !important; 
-                color: #000 !important; 
-                border: 1px solid #333 !important; 
-                margin-top: 10px !important; 
-                padding: 12px !important;
-                border-radius: 8px !important;
-            }
-            .total-row { margin-bottom: 4px !important; font-size: 12px !important; }
-            .total-row strong { color: #000 !important; font-size: 15px !important; }
+            .total-card { display: block !important; background: #F9F9F9 !important; color: #000 !important; border: 1px solid #000; }
+            .item { border: 1px solid #EEE; border-left: 5px solid #CCC; box-shadow: none; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="print-header">
-        <h1 style="margin:0 0 5px 0; font-size:20px;">자재 견적서</h1>
-        <div id="print-date"></div>
+    <div class="mode-selector">
+        <button id="user-mode-btn" class="mode-btn active" onclick="switchMode('user')">고객용 (요청)</button>
+        <button id="admin-mode-btn" class="mode-btn" onclick="switchMode('admin')">업체용 (산출)</button>
+    </div>
+
+    <div class="card admin-only admin-parse-area" style="border: 2px solid var(--ios-blue);">
+        <label style="color:var(--ios-blue); font-weight:bold;">📩 받은 문자 붙여넣기 (자동 분석)</label>
+        <textarea id="rawText" placeholder="고객이 보낸 견적 요청 문자를 여기에 붙여넣으세요."></textarea>
+        <button class="btn btn-parse" onclick="parseText()">자동 분석 후 목록 추가</button>
     </div>
 
     <div class="card">
-        <h2>자재 견적 계산기</h2>
+        <h2 id="title">자재 견적 요청</h2>
+        
         <div class="input-group">
             <label>자재</label>
             <select id="material">
-                <option value="7.93" data-class="border-sus">SUS303/304 (7.93)</option>
-                <option value="7.85" data-class="border-ss400">일반강 SS400 (7.85)</option>
-                <option value="2.7" data-class="border-al">알루미늄 (2.7)</option>
+                <option value="7.93">SUS303/304</option>
+                <option value="7.85">SS400 (일반강)</option>
+                <option value="2.7">알루미늄</option>
             </select>
         </div>
+
         <div class="input-group">
             <label>형태</label>
             <select id="shape" onchange="toggleInputs()">
                 <option value="square">사각판 (가로x세로)</option>
-                <option value="circle">환봉 (지름 D)</option>
-                <option value="hex">육각 (대변 S)</option>
+                <option value="circle">환봉 (지름)</option>
             </select>
         </div>
+
         <div id="square-inputs" class="input-group">
-            <label>치수 (mm)</label>
-            <div style="display:flex; gap:8px;"><input type="number" id="w" placeholder="가로"><input type="number" id="l" placeholder="세로"></div>
+            <label>가로 x 세로 (mm)</label>
+            <div style="display:flex; gap:5px;"><input type="number" id="w" placeholder="가로"><input type="number" id="l" placeholder="세로"></div>
         </div>
         <div id="circle-inputs" class="input-group" style="display:none;">
-            <label id="dia-label">지름 (D mm)</label>
-            <input type="number" id="dia" placeholder="치수 입력">
+            <label>지름 (D mm)</label>
+            <input type="number" id="dia" placeholder="지름">
         </div>
-        <div class="input-group"><label>두께(T) 또는 길이(L) mm</label><input type="number" id="t" placeholder="입력"></div>
-        <div class="input-group"><label>단가 (원/kg)</label><input type="number" id="unitPrice" value="5000"></div>
-        <button class="btn btn-add" onclick="addItem()">목록에 추가</button>
+
+        <div class="input-group">
+            <label>두께(T) / 길이(L) mm</label>
+            <input type="number" id="t" placeholder="입력">
+        </div>
+
+        <div class="input-group admin-only">
+            <label>적용 단가 (원/kg)</label>
+            <input type="number" id="unitPrice" value="5000">
+        </div>
+
+        <button id="main-btn" class="btn btn-request" onclick="addItem()">목록에 추가</button>
     </div>
 
     <div id="items"></div>
 
-    <div class="total-card">
-        <div class="total-row"><span>총 중량</span><span id="total-w">0.000</span> kg</div>
-        <div class="total-row" style="margin-top:5px; padding-top:5px; border-top:1px solid #CCC;">
-            <span>최종 합계</span><strong id="total-p">0</strong> 원
+    <div class="total-card admin-only">
+        <div id="print-date-display" class="date-info" style="color: #fff;"></div>
+        <div style="display:flex; justify-content:space-between; font-size:14px;"><span>총 중량</span><span id="total-w">0.000</span>kg</div>
+        <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #444; padding-top:10px;">
+            <span>최종 합계</span><strong id="total-p" style="color:#FFD60A; font-size:20px;">0</strong>원
         </div>
     </div>
 
-    <div class="ad-blink-box">📢 광고 모집 중 (클릭 문의)</div>
-
-    <div class="btn-box">
-        <button class="btn btn-pdf" onclick="preparePrint()">📄 PDF 견적서 저장 / 인쇄</button>
-        <button class="btn btn-copy" onclick="copyList()">📋 견적 복사</button>
-        <button class="btn btn-etc" onclick="shareSite()">🔗 사이트 공유</button>
-        <button class="btn btn-sms" onclick="sendSms()">📱 문자 전송</button>
-        <button class="btn btn-etc" onclick="showInstallGuide()">📲 홈 화면에 앱 설치 안내</button>
-    </div>
+    <button class="btn btn-pdf admin-only" onclick="generatePdf()">📄 정식 견적서 PDF 발행</button>
+    <button id="send-btn" class="btn btn-request" onclick="sendToOwner()">📩 업체에 견적 요청 (문자전송)</button>
 </div>
-
-<div class="fixed-ad"><div class="ad-blink-box">✨ 하단 배너 광고 모집 중 ✨</div></div>
 
 <script>
     let itemList = [];
+    let currentMode = 'user';
 
-    function getDateTime() {
-        const now = new Date();
-        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    function switchMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(mode + '-mode-btn').classList.add('active');
+        
+        const adminElements = document.querySelectorAll('.admin-only');
+        const title = document.getElementById('title');
+        const mainBtn = document.getElementById('main-btn');
+        const sendBtn = document.getElementById('send-btn');
+
+        if (mode === 'admin') {
+            adminElements.forEach(e => e.style.display = 'block');
+            title.innerText = "자재 견적 산출 (관리자)";
+            mainBtn.innerText = "수동 추가";
+            mainBtn.className = "btn btn-calculate";
+            sendBtn.style.display = 'none';
+        } else {
+            adminElements.forEach(e => e.style.display = 'none');
+            title.innerText = "자재 견적 요청";
+            mainBtn.innerText = "목록에 추가";
+            mainBtn.className = "btn btn-request";
+            sendBtn.style.display = 'block';
+        }
+        renderList();
     }
 
     function toggleInputs() {
         const s = document.getElementById('shape').value;
         document.getElementById('square-inputs').style.display = (s === 'square') ? 'block' : 'none';
-        document.getElementById('circle-inputs').style.display = (s !== 'square') ? 'block' : 'none';
-        document.getElementById('dia-label').innerText = (s === 'circle') ? "지름 (D mm)" : "대변폭 (S mm)";
+        document.getElementById('circle-inputs').style.display = (s === 'circle') ? 'block' : 'none';
     }
 
     function addItem() {
         const mat = document.getElementById('material');
         const opt = mat.options[mat.selectedIndex];
         const g = parseFloat(opt.value);
-        const color = opt.getAttribute('data-class');
         const shape = document.getElementById('shape').value;
         const t = document.getElementById('t').value / 10;
         const up = document.getElementById('unitPrice').value;
+        
         let wgt = 0; let txt = "";
-
         if (shape === 'square') {
             const w = document.getElementById('w').value / 10;
             const l = document.getElementById('l').value / 10;
             if(!w || !l || !t) return alert("치수를 입력하세요.");
             wgt = (w * l * t * g) / 1000;
-            txt = `${opt.text.split(' ')[0]}(사각) ${w*10}*${l*10}*${t*10}`;
-        } else if (shape === 'circle') {
+            txt = `${opt.text}(사각) ${w*10}*${l*10}*${t*10}`;
+        } else {
             const d = document.getElementById('dia').value / 10;
             if(!d || !t) return alert("지름과 길이를 입력하세요.");
             wgt = (Math.pow(d/2, 2) * Math.PI * t * g) / 1000;
-            txt = `${opt.text.split(' ')[0]}(환봉) D${d*10}*L${t*10}`;
-        } else {
-            const s = document.getElementById('dia').value / 10;
-            if(!s || !t) return alert("폭과 길이를 입력하세요.");
-            const area = (3 * Math.sqrt(3) / 2) * Math.pow(s / 2, 2);
-            wgt = (area * t * g) / 1000;
-            txt = `${opt.text.split(' ')[0]}(육각) S${s*10}*L${t*10}`;
+            txt = `${opt.text}(환봉) D${d*10}*L${t*10}`;
         }
-
-        itemList.push({ id: Date.now(), txt, weight: wgt, cost: Math.round(wgt * up), color });
+        itemList.push({ id: Date.now(), txt, weight: wgt, cost: Math.round(wgt * up) });
         renderList();
+    }
+
+    // 🚀 문자 자동 분석 로직
+    function parseText() {
+        const rawText = document.getElementById('rawText').value;
+        if(!rawText) return alert("문자 내용을 붙여넣으세요.");
+        
+        const up = document.getElementById('unitPrice').value;
+        const lines = rawText.split('\n');
+        let count = 0;
+
+        lines.forEach(line => {
+            // 정규식으로 숫자*숫자*숫자 형태 추출
+            const match = line.match(/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/);
+            if (match) {
+                const w = parseFloat(match[1]) / 10;
+                const l = parseFloat(match[2]) / 10;
+                const t = parseFloat(match[3]) / 10;
+                
+                // 자재 판별 (문자열에 포함된 단어 기준)
+                let g = 7.93; let matName = "SUS303/304";
+                if(line.includes("SS400") || line.includes("일반강")) { g = 7.85; matName = "SS400"; }
+                else if(line.includes("알루미늄") || line.includes("AL")) { g = 2.7; matName = "알루미늄"; }
+
+                const wgt = (w * l * t * g) / 1000;
+                itemList.push({ id: Date.now() + Math.random(), txt: `${matName}(사각) ${w*10}*${l*10}*${t*10}`, weight: wgt, cost: Math.round(wgt * up) });
+                count++;
+            }
+        });
+
+        if(count > 0) {
+            alert(count + "개의 항목을 분석하여 추가했습니다.");
+            document.getElementById('rawText').value = "";
+            renderList();
+        } else {
+            alert("분석 가능한 규격 형식이 없습니다. (예: 100*100*10)");
+        }
     }
 
     function renderList() {
@@ -198,8 +219,10 @@
         itemList.forEach((item, i) => {
             tw += item.weight; tp += item.cost;
             const div = document.createElement('div');
-            div.className = `item ${item.color}`;
-            div.innerHTML = `<div class="item-info"><span style="color:#34C759;font-weight:bold;">${i+1}.</span> <b>${item.txt}</b><p>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p></div><button class="del-btn" onclick="deleteItem(${item.id})">삭제</button>`;
+            div.className = 'item';
+            div.innerHTML = `<b>${i+1}. ${item.txt}</b>` + 
+                (currentMode === 'admin' ? `<p>${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원</p>` : `<p>견적 대기 중</p>`) +
+                `<button onclick="deleteItem(${item.id})" style="position:absolute; right:10px; top:10px; border:none; background:none; color:red; cursor:pointer;">삭제</button>`;
             container.appendChild(div);
         });
         document.getElementById('total-w').innerText = tw.toFixed(3);
@@ -208,25 +231,18 @@
 
     function deleteItem(id) { itemList = itemList.filter(i => i.id !== id); renderList(); }
 
-    function getSum() {
-        let s = "━━━━━━━━━━━━━━\n   [ 자 재  견 적 서 ]\n━━━━━━━━━━━━━━\n 일시: " + getDateTime() + "\n━━━━━━━━━━━━━━\n";
-        itemList.forEach((item, i) => { s += `${i+1}. ${item.txt}\n   ▶ ${item.weight.toFixed(3)}kg / ${item.cost.toLocaleString()}원\n`; });
-        s += "━━━━━━━━━━━━━━\n 합계: " + document.getElementById('total-w').innerText + "kg / " + document.getElementById('total-p').innerText + "원\n━━━━━━━━━━━━━━";
-        return s;
-    }
-
-    function preparePrint() {
-        document.getElementById('print-date').innerText = "견적 일시: " + getDateTime();
+    function generatePdf() {
+        const now = new Date();
+        document.getElementById('print-date-display').innerText = "발행일시: " + now.toLocaleString();
         window.print();
     }
 
-    function copyList() { navigator.clipboard.writeText(getSum()).then(() => alert("견적서가 복사되었습니다.")); }
-    function sendSms() { location.href = `sms:?body=${encodeURIComponent(getSum())}`; }
-    function shareSite() { navigator.share({ title: '자재 계산기', url: window.location.href }); }
-    function showInstallGuide() {
-        const ua = navigator.userAgent.toLowerCase();
-        if (ua.includes('kakaotalk')) alert("【 카톡에서 설치 방법 】\n\n1. 우측 하단 '점 3개' 클릭\n2. '다른 브라우저로 열기' 선택\n3. 이동 후 설치 버튼 재클릭");
-        else alert("홈 화면에 추가하여 앱처럼 사용하세요!");
+    function sendToOwner() {
+        if(itemList.length === 0) return alert("목록을 추가해주세요.");
+        let s = "[자재 견적 요청]\n";
+        itemList.forEach((item, i) => { s += `${i+1}. ${item.txt}\n`; });
+        s += "\n견적 부탁드립니다.";
+        location.href = `sms:01000000000?body=${encodeURIComponent(s)}`;
     }
 </script>
 </body>
